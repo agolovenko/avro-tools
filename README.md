@@ -1,7 +1,6 @@
-# json-to-avro-converter
+# avro-json-tools
 
-Converter of JSON object format to AVRO `GenericData.Record` written in Scala using Play-Json. Built against
-scala `2.11`, `2.12` and `2.13`
+Set of tools for JSON <=> Avro conversions written in Scala using Play-Json. Available for scala `2.11`, `2.12` and `2.13`
 
 ## Features
 
@@ -49,7 +48,7 @@ scala `2.11`, `2.12` and `2.13`
 ### build.sbt:
 
 ```sbt
-libraryDependencies ++= "io.github.agolovenko" %% "avro-json-tools" % "1.0.0"
+libraryDependencies ++= "io.github.agolovenko" %% "avro-json-tools" % "0.1.0"
 ```
 
 ### code:
