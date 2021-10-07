@@ -1,5 +1,6 @@
-package io.github.agolovenko.avro
+package io.github.agolovenko.avro.json
 
+import io.github.agolovenko.avro.{StringEncoders, StringParsers}
 import org.apache.avro.Schema.Parser
 import org.apache.avro.generic.GenericData
 import org.scalatest.Inspectors.forAll

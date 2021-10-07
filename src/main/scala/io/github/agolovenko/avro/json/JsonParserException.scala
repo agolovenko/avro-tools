@@ -1,8 +1,9 @@
-package io.github.agolovenko.avro
+package io.github.agolovenko.avro.json
 
+import io.github.agolovenko.avro.StackType.Stack
+import io.github.agolovenko.avro.{pathOf, typeName}
 import org.apache.avro.Schema
 import play.api.libs.json.JsValue
-import io.github.agolovenko.avro.StackType.Stack
 
 class JsonParserException(message: String)(implicit path: Stack[String]) extends RuntimeException(s"$message @ ${pathOf(path)}")
 

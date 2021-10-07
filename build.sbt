@@ -31,7 +31,7 @@ lazy val root = project
       "-Ywarn-dead-code",
       "-Ywarn-numeric-widen",
       "-Ywarn-value-discard",
-      "-Ywarn-unused"
+//      "-Ywarn-unused"
     ),
     initialize := {
       val _           = initialize.value

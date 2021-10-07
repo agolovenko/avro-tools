@@ -1,5 +1,6 @@
-package io.github.agolovenko.avro
+package io.github.agolovenko.avro.json
 
+import io.github.agolovenko.avro.typeName
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData
 import play.api.libs.json._

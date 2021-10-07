@@ -1,6 +1,7 @@
-package io.github.agolovenko.avro
+package io.github.agolovenko.avro.json
 
 import io.github.agolovenko.avro.StackType.Stack
+import io.github.agolovenko.avro.{pathOf, typeName}
 import org.apache.avro.generic.GenericData
 import org.apache.avro.{LogicalTypes, Schema}
 

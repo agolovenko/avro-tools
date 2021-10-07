@@ -55,6 +55,7 @@ libraryDependencies ++= "io.github.agolovenko" %% "avro-json-tools" % "0.1.0"
 
 ```scala
 import io.github.agolovenko.avro._
+import io.github.agolovenko.avro.json.{JsonEncoder, JsonParser, RandomData}
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData
 import play.api.libs.json.{JsObject, Json}
@@ -81,25 +82,28 @@ val schema = new Schema.Parser().parse(
     |}""".stripMargin)
 
 // JsonParser example
+
 import StringParsers._
 
-val data                       = Json.parse("""{"field1": [12, 14]}""")
-val parser                     = new JsonParser(primitiveParsers ++ base64Parsers)
+val data = Json.parse("""{"field1": [12, 14]}""")
+val parser = new JsonParser(primitiveParsers ++ base64Parsers)
 val record: GenericData.Record = parser(data, schema)
-val bytes: Array[Byte]         = toBytes(record)
+val bytes: Array[Byte] = toBytes(record)
 
 // JsonEncoder example
+
 import StringEncoders._
 
-val encoder        = new JsonEncoder(base64Encoders ++ dateEncoder(DateTimeFormatter.ISO_DATE))
+val encoder = new JsonEncoder(base64Encoders ++ dateEncoder(DateTimeFormatter.ISO_DATE))
 val json: JsObject = encoder(record)
 
 // RandomData example
+
 import RandomData._
 
 val namedGenerators: Map[String, Random => Any] = Map(pathOf("a", "past") -> (implicit random => randomDay(LocalDate.now().minusDays(30), maxDays = 30)))
-val typedGenerators                             = timeGenerators ++ dateGenerator(fromDate = LocalDate.now(), maxDays = 10)
-val records: Iterator[GenericData.Record]       = new RandomData(schema, total = 1 << 10, typedGenerators, namedGenerators).map(_.asInstanceOf[GenericData.Record])
+val typedGenerators = timeGenerators ++ dateGenerator(fromDate = LocalDate.now(), maxDays = 10)
+val records: Iterator[GenericData.Record] = new RandomData(schema, total = 1 << 10, typedGenerators, namedGenerators).map(_.asInstanceOf[GenericData.Record])
 ```
 
 For more examples check out the [tests](src/test/scala/io/github/agolovenko/avro)!

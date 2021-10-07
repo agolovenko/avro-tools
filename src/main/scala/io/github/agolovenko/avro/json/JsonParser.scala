@@ -1,6 +1,7 @@
-package io.github.agolovenko.avro
+package io.github.agolovenko.avro.json
 
 import io.github.agolovenko.avro.StackType.Stack
+import io.github.agolovenko.avro.typeName
 import org.apache.avro.Schema.Type._
 import org.apache.avro.generic.GenericData
 import org.apache.avro.{JsonProperties, Schema}
@@ -97,17 +98,19 @@ class JsonParser(stringParsers: Map[String, String => Any] = Map.empty) {
     }
 
   private def readUnion(data: JsLookupResult, schema: Schema, defaultValue: Option[Any])(implicit path: Stack[String]): Any = {
-    val it = schema.getTypes.asScala.iterator.zipWithIndex
-      .flatMap {
-        case (subSchema, idx) =>
-          Try(readAny(data, subSchema, defaultValue.filter(_ => idx == 0))).toOption
-      }
+    def unionIt = schema.getTypes.asScala.iterator.zipWithIndex.map {
+      case (subSchema, idx) => Try(readAny(data, subSchema, defaultValue.filter(_ => idx == 0)))
+    }
+
+    val it = unionIt.flatMap(_.toOption)
 
     if (it.hasNext) it.next()
     else
       data match {
-        case JsDefined(otherNode) => throw new WrongTypeException(schema, otherNode)
-        case _                    => throw new MissingValueException(schema)
+        case JsDefined(otherNode) =>
+          val explanation = unionIt.flatMap(_.failed.map(_.getMessage).toOption).mkString("; ")
+          throw new WrongTypeException(schema, otherNode, Some(explanation))
+        case _ => throw new MissingValueException(schema)
       }
   }
 

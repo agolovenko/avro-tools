@@ -1,4 +1,4 @@
-package io.github.agolovenko.avro
+package io.github.agolovenko.avro.json
 
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData

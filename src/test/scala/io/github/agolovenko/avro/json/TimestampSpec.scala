@@ -1,5 +1,6 @@
-package io.github.agolovenko.avro
+package io.github.agolovenko.avro.json
 
+import io.github.agolovenko.avro.StringParsers
 import org.apache.avro.generic.GenericData
 import org.apache.avro.{LogicalTypes, Schema}
 import org.scalatest.matchers.should.Matchers
