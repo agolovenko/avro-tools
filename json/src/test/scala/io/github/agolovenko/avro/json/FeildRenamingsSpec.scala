@@ -1,6 +1,6 @@
-package io.github.agolovenko.avro
+package io.github.agolovenko.avro.json
 
-import io.github.agolovenko.avro.json.JsonParser
+import io.github.agolovenko.avro.{FieldRenamings, Path}
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData
 import org.scalatest.matchers.should.Matchers

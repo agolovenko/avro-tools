@@ -9,11 +9,18 @@ class Dependencies(scalaVersion: String) {
   private def scalaXml         = "org.scala-lang.modules" %% "scala-xml"               % "1.3.0"
   private def scalaTest        = "org.scalatest"          %% "scalatest"               % "3.2.3"
 
-  def all: Seq[ModuleID] = Seq(
+  def core: Seq[ModuleID] = Seq(
     collectionCompat % Compile,
-    playJson         % Compile,
-    apacheAvro       % Compile,
-    scalaXml         % Compile,
-    scalaTest        % Test
+    apacheAvro       % Compile
+  )
+
+  def json: Seq[ModuleID] = Seq(
+    playJson  % Compile,
+    scalaTest % Test
+  )
+
+  def xml: Seq[ModuleID] = Seq(
+    scalaXml  % Compile,
+    scalaTest % Test
   )
 }
