@@ -48,7 +48,7 @@ Set of tools for JSON <=> Avro conversions written in Scala using Play-Json. Ava
 ### build.sbt:
 
 ```sbt
-libraryDependencies ++= "io.github.agolovenko" %% "avro-json-tools" % "0.1.0"
+libraryDependencies ++= "io.github.agolovenko" %% "avro-json-tools" % "0.2.0"
 ```
 
 ### code:
@@ -90,6 +90,8 @@ val parser = new JsonParser(primitiveParsers ++ base64Parsers)
 val record: GenericData.Record = parser(data, schema)
 val bytes: Array[Byte] = toBytes(record)
 
+
+
 // JsonEncoder example
 
 import StringEncoders._
@@ -101,7 +103,7 @@ val json: JsObject = encoder(record)
 
 import RandomData._
 
-val namedGenerators: Map[String, Random => Any] = Map(pathOf("a", "past") -> (implicit random => randomDay(LocalDate.now().minusDays(30), maxDays = 30)))
+val namedGenerators: Map[Path, Random => Any] = Map(Path("a", "past") -> (implicit random => randomDay(LocalDate.now().minusDays(30), maxDays = 30)))
 val typedGenerators = timeGenerators ++ dateGenerator(fromDate = LocalDate.now(), maxDays = 10)
 val records: Iterator[GenericData.Record] = new RandomData(schema, total = 1 << 10, typedGenerators, namedGenerators).map(_.asInstanceOf[GenericData.Record])
 ```

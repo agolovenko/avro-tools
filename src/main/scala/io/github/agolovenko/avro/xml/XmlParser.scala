@@ -1,7 +1,6 @@
 package io.github.agolovenko.avro.xml
 
-import io.github.agolovenko.avro.StackType.Stack
-import io.github.agolovenko.avro.typeName
+import io.github.agolovenko.avro.{FieldRenamings, Path, typeName}
 import org.apache.avro.Schema.Type._
 import org.apache.avro.generic.GenericData
 import org.apache.avro.{JsonProperties, Schema}
@@ -14,16 +13,16 @@ import scala.util.Try
 import scala.util.control.NonFatal
 import scala.xml._
 
-class XmlParser(stringParsers: Map[String, String => Any] = Map.empty) {
+class XmlParser(stringParsers: Map[String, String => Any] = Map.empty, fieldRenamings: FieldRenamings = new FieldRenamings(Map.empty)) {
   def apply(data: Elem, schema: Schema): GenericData.Record = {
-    implicit val path = new Stack[String]()
+    implicit val path = new Path
     if (schema.getType == RECORD)
       if (schema.getName == data.label) readRecord(data, schema, defaultValue = None)
       else throw new XmlParserException(s"Expected '${schema.getName}' root node, got instead: '${data.label}'")
     else throw new XmlParserException(s"Unsupported root schema of type ${schema.getType}")
   }
 
-  private def readAny(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(implicit path: Stack[String]): Any =
+  private def readAny(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Any =
     schema.getType match {
       case RECORD  => readRecord(data, schema, defaultValue)
       case ENUM    => readEnum(data, attributes, schema, defaultValue)
@@ -42,13 +41,14 @@ class XmlParser(stringParsers: Map[String, String => Any] = Map.empty) {
       case NULL => readNull(data, attributes, schema, defaultValue)
     }
 
-  private def readRecord(data: NodeSeq, schema: Schema, defaultValue: Option[Any])(implicit path: Stack[String]): GenericData.Record =
+  private def readRecord(data: NodeSeq, schema: Schema, defaultValue: Option[Any])(implicit path: Path): GenericData.Record =
     data match {
       case Single(elem: Elem) =>
         val result = new GenericData.Record(schema)
         schema.getFields.asScala.foreach { field =>
-          path.push(field.name())
-          val value = readAny(elem \ field.name(), elem.attributes.get(field.name()).map(_.toSeq), field.schema(), Option(field.defaultVal()))
+          val fieldName = fieldRenamings(field.name())
+          path.push(fieldName)
+          val value = readAny(elem \ fieldName, elem.attributes.get(field.name()).map(_.toSeq), field.schema(), Option(field.defaultVal()))
           result.put(field.name(), value)
           path.pop()
         }
@@ -58,7 +58,7 @@ class XmlParser(stringParsers: Map[String, String => Any] = Map.empty) {
     }
 
   private def readEnum(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(
-      implicit path: Stack[String]
+      implicit path: Path
   ): GenericData.EnumSymbol = {
     val symbol = read(data, attributes, schema, defaultValue)
 
@@ -66,7 +66,7 @@ class XmlParser(stringParsers: Map[String, String => Any] = Map.empty) {
     else throw new WrongTypeException(schema, data)
   }
 
-  private def readArray(data: NodeSeq, schema: Schema, defaultValue: Option[Any])(implicit path: Stack[String]): GenericData.Array[Any] = {
+  private def readArray(data: NodeSeq, schema: Schema, defaultValue: Option[Any])(implicit path: Path): GenericData.Array[Any] = {
     val elemLabel =
       if (schema.getElementType.getType == RECORD)
         schema.getElementType.getName
@@ -80,7 +80,7 @@ class XmlParser(stringParsers: Map[String, String => Any] = Map.empty) {
     }
   }
 
-  private def parseArray(nodes: Seq[Node], schema: Schema)(implicit path: Stack[String]): GenericData.Array[Any] = {
+  private def parseArray(nodes: Seq[Node], schema: Schema)(implicit path: Path): GenericData.Array[Any] = {
     val elems = nodes.collect { case elem: Elem => elem }
 
     val result = new GenericData.Array[Any](elems.size, schema)
@@ -94,7 +94,7 @@ class XmlParser(stringParsers: Map[String, String => Any] = Map.empty) {
     result
   }
 
-  private def readUnion(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(implicit path: Stack[String]): Any = {
+  private def readUnion(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Any = {
     def unionIt = schema.getTypes.asScala.iterator.zipWithIndex.map {
       case (subSchema, idx) => Try(readAny(data, attributes, subSchema, defaultValue.filter(_ => idx == 0)))
     }
@@ -109,11 +109,11 @@ class XmlParser(stringParsers: Map[String, String => Any] = Map.empty) {
     }
   }
 
-  private def readBytes(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(implicit path: Stack[String]): Any =
+  private def readBytes(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Any =
     read(data, attributes, schema, defaultValue)
 
   private def readFixed(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(
-      implicit path: Stack[String]
+      implicit path: Path
   ): GenericData.Fixed = {
     val bytes = readBytes(data, attributes, schema, defaultValue).asInstanceOf[Array[Byte]]
 
@@ -121,7 +121,7 @@ class XmlParser(stringParsers: Map[String, String => Any] = Map.empty) {
     else throw new WrongTypeException(schema, data, Some(s"incorrect size: ${bytes.length} instead of ${schema.getFixedSize}"))
   }
 
-  private def read(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(implicit path: Stack[String]): Any =
+  private def read(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Any =
     TextNode
       .toText(attributes)
       .map(parseString(_, schema, data))
@@ -133,7 +133,7 @@ class XmlParser(stringParsers: Map[String, String => Any] = Map.empty) {
         }
       }
 
-  private def parseString(str: String, schema: Schema, data: NodeSeq)(implicit path: Stack[String]): Any =
+  private def parseString(str: String, schema: Schema, data: NodeSeq)(implicit path: Path): Any =
     if (schema.getType == STRING || schema.getType == ENUM) str
     else
       stringParsers.get(typeName(schema)).fold(throw new WrongTypeException(schema, data, Some("no string parser supplied"))) { parser =>
@@ -144,14 +144,14 @@ class XmlParser(stringParsers: Map[String, String => Any] = Map.empty) {
         }
       }
 
-  private def readNull(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(implicit path: Stack[String]): Null =
+  private def readNull(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Null =
     if (data.isEmpty && attributes.isEmpty) fallbackToDefault(defaultValue, schema).asInstanceOf[Null]
     else throw new WrongTypeException(schema, data)
 
-  private def fallbackToDefault(defaultValue: Option[Any], schema: Schema)(implicit path: Stack[String]): Any =
+  private def fallbackToDefault(defaultValue: Option[Any], schema: Schema)(implicit path: Path): Any =
     defaultValue.fold(throw new MissingValueException(schema)) { extractDefaultValue(_, schema) }
 
-  private def extractDefaultValue(defaultValue: Any, schema: Schema)(implicit path: Stack[String]): Any = (schema.getType, defaultValue) match {
+  private def extractDefaultValue(defaultValue: Any, schema: Schema)(implicit path: Path): Any = (schema.getType, defaultValue) match {
     case (NULL, JsonProperties.NULL_VALUE) => null
     case (STRING, value: String)           => value
     case (ENUM, value: String)             => value

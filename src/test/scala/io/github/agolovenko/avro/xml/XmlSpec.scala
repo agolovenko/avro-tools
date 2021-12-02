@@ -17,5 +17,4 @@ class XmlSpec extends AnyWordSpec with Matchers {
 
     println("success")
   }
-
 }

@@ -1,7 +1,6 @@
 package io.github.agolovenko.avro.json
 
-import io.github.agolovenko.avro.StackType.Stack
-import io.github.agolovenko.avro.{pathOf, typeName}
+import io.github.agolovenko.avro.{Path, typeName}
 import org.apache.avro.generic.GenericData
 import org.apache.avro.{LogicalTypes, Schema}
 
@@ -16,15 +15,16 @@ class RandomData(
     rootSchema: Schema,
     total: Int,
     typedGenerators: Map[String, Random => Any] = Map.empty,
-    namedGenerators: Map[String, Random => Any] = Map.empty,
+    namedGenerators: Map[Path, Random => Any] = Map.empty,
     seed: Long = System.currentTimeMillis,
     maxLength: Int = 1 << 4
 ) extends Iterator[Any] {
   import Schema.Type._
 
-  private var count  = 0
-  private val random = new Random(seed)
-  private val path   = new Stack[String]()
+  private var count        = 0
+  private val random       = new Random(seed)
+  private val path         = new Path
+  private val namedGensMap = namedGenerators.map { case (path, gen) => path.mkString(withArrayIdx = false) -> gen }
 
   override def hasNext: Boolean = count < total
 
@@ -34,7 +34,7 @@ class RandomData(
     generate(rootSchema)
   }
 
-  private def namedGenerator                 = if (namedGenerators.nonEmpty) namedGenerators.get(pathOf(path)) else None
+  private def namedGenerator                 = if (namedGensMap.nonEmpty) namedGensMap.get(path.mkString(withArrayIdx = false)) else None
   private def typedGenerator(schema: Schema) = if (typedGenerators.nonEmpty) typedGenerators.get(typeName(schema)) else None
 
   private def generate(schema: Schema): Any =
@@ -91,7 +91,7 @@ class RandomData(
         val result = generator(random)
 
         if (!GenericData.get().validate(schema, result))
-          throw new IllegalArgumentException(s"Generated value $result isn't of type ${typeName(schema)} @ ${pathOf(path)}")
+          throw new IllegalArgumentException(s"Generated value $result isn't of type ${typeName(schema)} @ $path")
 
         result
       }

@@ -1,6 +1,5 @@
 package io.github.agolovenko
 
-import io.github.agolovenko.avro.StackType.Stack
 import org.apache.avro.Schema
 import org.apache.avro.Schema.Type.{ENUM, UNION}
 import org.apache.avro.generic.{GenericData, GenericDatumReader, GenericDatumWriter}
@@ -30,9 +29,6 @@ package object avro {
 
     reader.read(null, decoder)
   }
-
-  def pathOf(pathElements: String*): String = pathElements.mkString("/", "/", "")
-  def pathOf(path: Stack[String]): String   = pathOf(path.view.reverse.toSeq: _*)
 
   def typeName(schema: Schema): String =
     if (schema.getLogicalType != null) schema.getLogicalType.getName
