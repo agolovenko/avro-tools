@@ -13,8 +13,8 @@ import scala.util.Try
 import scala.util.control.NonFatal
 import scala.xml._
 
-class XmlParser(stringParsers: Map[String, String => Any] = Map.empty, fieldRenamings: FieldRenamings = new FieldRenamings(Map.empty)) {
-  def apply(data: Elem, schema: Schema): GenericData.Record = {
+class XmlParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.empty, fieldRenamings: FieldRenamings = new FieldRenamings(Map.empty)) {
+  def apply(data: Elem): GenericData.Record = {
     implicit val path = new Path
     if (schema.getType == RECORD)
       if (schema.getName == data.label) readRecord(data, schema, defaultValue = None)
@@ -26,7 +26,7 @@ class XmlParser(stringParsers: Map[String, String => Any] = Map.empty, fieldRena
     schema.getType match {
       case RECORD  => readRecord(data, schema, defaultValue)
       case ENUM    => readEnum(data, attributes, schema, defaultValue)
-      case MAP     => throw new XmlParserException("'MAP' type is not supported fro XML format")
+      case MAP     => throw new XmlParserException("'MAP' type is not supported for XML format")
       case ARRAY   => readArray(data, schema, defaultValue)
       case UNION   => readUnion(data, attributes, schema, defaultValue)
       case BYTES   => readBytes(data, attributes, schema, defaultValue)
@@ -70,7 +70,7 @@ class XmlParser(stringParsers: Map[String, String => Any] = Map.empty, fieldRena
     val elemLabel =
       if (schema.getElementType.getType == RECORD)
         schema.getElementType.getName
-      else throw new XmlParserException(s"Only 'RECORD' is supported as 'ARRAY' subtype, got instead ${schema.getElementType.getName}")
+      else throw new XmlParserException(s"Only 'RECORD' is supported as 'ARRAY' member, got instead ${schema.getElementType.getName}")
 
     data match {
       case Single(elem: Elem) if elem.label != elemLabel => parseArray(elem.child, schema)
