@@ -17,7 +17,7 @@ class Path {
 
   override def toString: String = mkString(withArrayIdx = true)
 
-  override def hashCode(): Int  = pathStack.hashCode()
+  override def hashCode(): Int = pathStack.hashCode()
   override def equals(obj: Any): Boolean = obj match {
     case other: Path => pathStack == other.pathStack
     case _           => false

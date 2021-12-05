@@ -48,7 +48,7 @@ Set of tools for JSON <=> Avro conversions written in Scala using Play-Json. Ava
 ### build.sbt:
 
 ```sbt
-libraryDependencies ++= "io.github.agolovenko" %% "avro-json-tools" % "0.2.0"
+libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-json" % "0.2.0"
 ```
 
 ### code:

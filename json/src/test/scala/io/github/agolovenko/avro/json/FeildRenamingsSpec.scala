@@ -1,6 +1,6 @@
 package io.github.agolovenko.avro.json
 
-import io.github.agolovenko.avro.{FieldRenamings, Path}
+import io.github.agolovenko.avro.{FieldRenamings, Path, RenameRule}
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData
 import org.scalatest.matchers.should.Matchers
@@ -43,16 +43,16 @@ class FeildRenamingsSpec extends AnyWordSpec with Matchers {
 
   "renames fields correctly" in {
     val data      = Json.parse("""{"field-1": [{"n-field1": "aaa", "n_field2": 23}]}""")
-    val renamings = new FieldRenamings(Map(Path("field-1") -> "field1", Path("field-1", "n-field1") -> "n_field1"))
+    val renamings = new FieldRenamings(RenameRule(Path("field-1"), "field1"), RenameRule(Path("field-1", "n-field1"), "n_field1"))
+    val record    = new JsonParser(schema, fieldRenamings = renamings)(data)
 
-    val record = new JsonParser(fieldRenamings = renamings)(data, schema)
-
-    GenericData.get().validate(schema, record) should ===(true)
+    GenericData.get().validate(schema, record) shouldBe true
 
     val rec1 = new GenericData.Record(schema.getField("field1").schema().getElementType)
     rec1.put("n_field1", "aaa")
     rec1.put("n_field2", 23)
     val expected = new GenericData.Array(schema.getField("field1").schema(), Seq(rec1).asJava)
-    record.get("field1") should ===(expected)
+
+    record.get("field1") shouldBe expected
   }
 }

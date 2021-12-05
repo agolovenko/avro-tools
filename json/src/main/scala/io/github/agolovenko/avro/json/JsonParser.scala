@@ -14,9 +14,9 @@ import scala.jdk.CollectionConverters._
 import scala.util.Try
 import scala.util.control.NonFatal
 
-class JsonParser(stringParsers: Map[String, String => Any] = Map.empty, fieldRenamings: FieldRenamings = new FieldRenamings(Map.empty)) {
-  def apply(data: JsValue, schema: Schema): GenericData.Record = {
-    implicit val path = new Path
+class JsonParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.empty, fieldRenamings: FieldRenamings = new FieldRenamings()) {
+  def apply(data: JsValue): GenericData.Record = {
+    implicit val path: Path = new Path
     if (schema.getType == RECORD)
       readRecord(JsDefined(data), schema, defaultValue = None)
     else

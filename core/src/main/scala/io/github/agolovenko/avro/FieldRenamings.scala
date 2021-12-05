@@ -1,21 +1,22 @@
 package io.github.agolovenko.avro
 
-class FieldRenamings(renamings: Map[Path, String]) {
-  private val renamingsMap = renamings.map {
-    case (path, avroName) =>
-      val srcName = path.pop()
-      path.push(avroName)
-      path.mkString(withArrayIdx = false) -> srcName
-  }
+case class RenameRule(path: Path, avroName: String)
 
-  def apply(fieldName: String)(implicit path: Path): String =
-    if (renamings.nonEmpty) {
-      path.push(fieldName)
+class FieldRenamings(rules: RenameRule*) {
+  private val renamingsMap = rules.map { rule =>
+    val srcName = rule.path.pop()
+    rule.path.push(rule.avroName)
+    rule.path.mkString(withArrayIdx = false) -> srcName
+  }.toMap
+
+  def apply(avroName: String)(implicit path: Path): String =
+    if (rules.nonEmpty) {
+      path.push(avroName)
       val pathKey = path.mkString(withArrayIdx = false)
       path.pop()
 
-      val result = renamingsMap.getOrElse(pathKey, fieldName)
+      val result = renamingsMap.getOrElse(pathKey, avroName)
 
       result
-    } else fieldName
+    } else avroName
 }

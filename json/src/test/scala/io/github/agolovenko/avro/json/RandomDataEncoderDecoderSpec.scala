@@ -126,6 +126,7 @@ class RandomDataEncoderDecoderSpec extends AnyWordSpec with Matchers {
     )
 
     val parser = new JsonParser(
+      schema,
       base64Parsers
         ++ dateParser(ISO_DATE)
         ++ timeParsers(ISO_LOCAL_TIME)
@@ -145,7 +146,7 @@ class RandomDataEncoderDecoderSpec extends AnyWordSpec with Matchers {
 
     forAll(jsons) {
       case (original, json) =>
-        val parsed = parser(json, schema)
+        val parsed = parser(json)
         parsed should ===(original)
     }
   }

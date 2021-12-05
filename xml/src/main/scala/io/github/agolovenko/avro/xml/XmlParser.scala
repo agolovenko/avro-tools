@@ -13,9 +13,9 @@ import scala.util.Try
 import scala.util.control.NonFatal
 import scala.xml._
 
-class XmlParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.empty, fieldRenamings: FieldRenamings = new FieldRenamings(Map.empty)) {
+class XmlParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.empty, fieldRenamings: FieldRenamings = new FieldRenamings()) {
   def apply(data: Elem): GenericData.Record = {
-    implicit val path = new Path
+    implicit val path: Path = new Path
     if (schema.getType == RECORD)
       if (schema.getName == data.label) readRecord(data, schema, defaultValue = None)
       else throw new XmlParserException(s"Expected '${schema.getName}' root node, got instead: '${data.label}'")

@@ -20,7 +20,7 @@ class NullSpec extends AnyWordSpec with Matchers {
 
   "parses correctly" in {
     val data   = Json.parse("""{"field1": null}""")
-    val record = new JsonParser()(data, schema)
+    val record = new JsonParser(schema)(data)
 
     GenericData.get().validate(schema, record) should ===(true)
     record.get("field1") should ===(null)
@@ -28,17 +28,17 @@ class NullSpec extends AnyWordSpec with Matchers {
 
   "fails on missing value" in {
     val data = Json.parse("{}")
-    a[MissingValueException] should be thrownBy new JsonParser()(data, schema)
+    a[MissingValueException] should be thrownBy new JsonParser(schema)(data)
   }
 
   "fails on wrong type" in {
     val data = Json.parse("""{"field1": "12"}""")
-    a[WrongTypeException] should be thrownBy new JsonParser()(data, schema)
+    a[WrongTypeException] should be thrownBy new JsonParser(schema)(data)
   }
 
   "applies default value" in {
     val data   = Json.parse("{}")
-    val record = new JsonParser()(data, schemaWithDefault)
+    val record = new JsonParser(schemaWithDefault)(data)
 
     GenericData.get().validate(schema, record) should ===(true)
     record.get("field2") should ===(null)

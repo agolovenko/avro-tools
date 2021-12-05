@@ -37,7 +37,7 @@ class NestedRecordSpec extends AnyWordSpec with Matchers {
 
   "parses nested record correctly" in {
     val data   = Json.parse("""{"field1": {"n_field1": "aaa", "n_field2": 23}}""")
-    val record = new JsonParser()(data, schema)
+    val record = new JsonParser(schema)(data)
 
     GenericData.get().validate(schema, record) should ===(true)
     val expected = new GenericData.Record(schema.getField("field1").schema())
@@ -48,7 +48,7 @@ class NestedRecordSpec extends AnyWordSpec with Matchers {
 
   "applies default value to nested record" in {
     val data   = Json.parse("{}")
-    val record = new JsonParser()(data, schema)
+    val record = new JsonParser(schema)(data)
 
     GenericData.get().validate(schema, record) should ===(true)
     val expected = new GenericData.Record(schema.getField("field1").schema())
