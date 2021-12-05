@@ -23,7 +23,7 @@ object StringParsers {
     FIXED.name() -> parseBase64
   )
 
-  def uuidParser: Map[String, String => Any] = Map(
+  def uuidParser: Map[String, String => String] = Map(
     LogicalTypes.uuid().getName -> (UUID.fromString(_).toString)
   )
 
@@ -46,7 +46,7 @@ object StringParsers {
     LogicalTypes.timestampMicros().getName -> (s => toEpochMicros(LocalDateTime.parse(s, formatter).atZone(zoneId).toInstant))
   )
 
-  private def parseBase64(str: String) = Base64.getDecoder.decode(str)
+  private def parseBase64(str: String): Array[Byte] = Base64.getDecoder.decode(str)
 
-  private def toEpochMicros(ins: Instant) = ins.getEpochSecond * 1000000L + ins.getNano / 1000L
+  private def toEpochMicros(ins: Instant): Long = ins.getEpochSecond * 1000000L + ins.getNano / 1000L
 }
