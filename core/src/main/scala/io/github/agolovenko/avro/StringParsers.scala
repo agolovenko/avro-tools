@@ -7,7 +7,7 @@ import java.nio.ByteBuffer
 import java.time._
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoField
-import java.util.Base64
+import java.util.{Base64, UUID}
 
 object StringParsers {
   val primitiveParsers: Map[String, String => Any] = Map(
@@ -21,6 +21,10 @@ object StringParsers {
   val base64Parsers: Map[String, String => Any] = Map(
     BYTES.name() -> (str => ByteBuffer.wrap(parseBase64(str))),
     FIXED.name() -> parseBase64
+  )
+
+  def uuidParser: Map[String, String => Any] = Map(
+    LogicalTypes.uuid().getName -> (UUID.fromString(_).toString)
   )
 
   def dateParser(formatter: DateTimeFormatter): Map[String, String => Any] = Map(
