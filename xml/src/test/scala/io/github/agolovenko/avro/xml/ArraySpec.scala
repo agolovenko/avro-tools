@@ -139,4 +139,36 @@ class ArraySpec extends AnyWordSpec with Matchers {
 
     parser(xml) shouldBe expected
   }
+
+  "parses arrays of simple types" in {
+    val schema = new Parser().parse("""
+        |{
+        |  "type": "record",
+        |  "name": "sch_rec1",
+        |  "fields": [
+        |    {
+        |     "name": "ar",
+        |     "type": {
+        |       "type": "array",
+        |       "items": "int"
+        |     }
+        |    }
+        |  ]
+        |}""".stripMargin)
+
+    val xml = XML.loadString("""
+        |<sch_rec1>
+        |   <ar>1</ar>
+        |   <ar>2</ar>
+        |</sch_rec1>
+        |""".stripMargin)
+
+    val parser = new XmlParser(schema, StringParsers.primitiveParsers)
+
+    val ar       = new GenericData.Array(schema.getField("ar").schema(), Seq(1, 2).asJava)
+    val expected = new GenericData.Record(schema)
+    expected.put("ar", ar)
+
+    parser(xml) shouldBe expected
+  }
 }

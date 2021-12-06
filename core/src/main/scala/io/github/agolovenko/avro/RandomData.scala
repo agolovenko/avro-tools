@@ -1,6 +1,5 @@
-package io.github.agolovenko.avro.json
+package io.github.agolovenko.avro
 
-import io.github.agolovenko.avro.{Path, typeName}
 import org.apache.avro.generic.GenericData
 import org.apache.avro.{LogicalTypes, Schema}
 

@@ -11,7 +11,8 @@ class Dependencies(scalaVersion: String) {
 
   def core: Seq[ModuleID] = Seq(
     collectionCompat % Compile,
-    apacheAvro       % Compile
+    apacheAvro       % Compile,
+    scalaTest        % Test
   )
 
   def json: Seq[ModuleID] = Seq(

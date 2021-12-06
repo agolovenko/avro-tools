@@ -27,7 +27,7 @@ object StringParsers {
     LogicalTypes.uuid().getName -> (UUID.fromString(_).toString)
   )
 
-  def dateParser(formatter: DateTimeFormatter): Map[String, String => Any] = Map(
+  def dateParser(formatter: DateTimeFormatter): Map[String, String => Int] = Map(
     LogicalTypes.date().getName -> (LocalDate.parse(_, formatter).toEpochDay.toInt)
   )
 
@@ -36,12 +36,12 @@ object StringParsers {
     LogicalTypes.timeMicros().getName -> (LocalTime.parse(_, formatter).getLong(ChronoField.MICRO_OF_DAY))
   )
 
-  def zonedDateTimeParsers(formatter: DateTimeFormatter): Map[String, String => Any] = Map(
+  def zonedDateTimeParsers(formatter: DateTimeFormatter): Map[String, String => Long] = Map(
     LogicalTypes.timestampMillis().getName -> (ZonedDateTime.parse(_, formatter).toInstant.toEpochMilli),
     LogicalTypes.timestampMicros().getName -> (s => toEpochMicros(ZonedDateTime.parse(s, formatter).toInstant))
   )
 
-  def localDateTimeParsers(formatter: DateTimeFormatter, zoneId: ZoneId): Map[String, String => Any] = Map(
+  def localDateTimeParsers(formatter: DateTimeFormatter, zoneId: ZoneId): Map[String, String => Long] = Map(
     LogicalTypes.timestampMillis().getName -> (LocalDateTime.parse(_, formatter).atZone(zoneId).toInstant.toEpochMilli),
     LogicalTypes.timestampMicros().getName -> (s => toEpochMicros(LocalDateTime.parse(s, formatter).atZone(zoneId).toInstant))
   )

@@ -70,7 +70,7 @@ class XmlParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.
     val elemLabel =
       if (schema.getElementType.getType == RECORD)
         schema.getElementType.getName
-      else throw new XmlParserException(s"Only 'RECORD' is supported as 'ARRAY' member, got instead ${schema.getElementType.getName}")
+      else path.peek
 
     data match {
       case Single(elem: Elem) if elem.label != elemLabel => parseArray(elem.child, schema)

@@ -9,6 +9,7 @@ class Path {
   def push(arrayIdx: Int): Unit     = pathStack.push(s"[$arrayIdx]")
   def pop(): String                 = pathStack.pop()
   def clear(): Unit                 = pathStack.clear()
+  def peek: String                  = pathStack.top
 
   def mkString(withArrayIdx: Boolean): String = {
     val it = if (withArrayIdx) pathStack.reverseIterator else pathStack.reverseIterator.filterNot(_.startsWith("["))
