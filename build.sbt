@@ -28,6 +28,7 @@ scalacOptions ++= Seq(
 publishMavenStyle := true
 scalaVersion := scala212
 crossScalaVersions := supportedScalaVersions
+versionScheme := Some("early-semver")
 
 lazy val core = project
   .in(file("core"))
