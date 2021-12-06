@@ -27,8 +27,7 @@ Set of tools for XML to Avro conversions written in Scala using scala-xml. Avail
 ### build.sbt:
 
 ```sbt
-libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-xml" % "0.1.0"
-
+libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-xml" % "0.2.0"
 ```
 
 ### code:
@@ -38,11 +37,8 @@ import io.github.agolovenko.avro._
 import io.github.agolovenko.avro.xml.XmlParser
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData
-import scala.xml.XML
 
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import scala.util.Random
+import scala.xml.XML
 
 val schema = new Schema.Parser().parse(
   """
@@ -60,8 +56,6 @@ val schema = new Schema.Parser().parse(
     |  ]
     |}""".stripMargin)
 
-import StringParsers._
-
 val data = XML.loadString(
   """
     |<sch_rec1>
@@ -70,7 +64,7 @@ val data = XML.loadString(
     |</sch_rec1>
     |""".stripMargin)
 
-val parser = new XmlParser(schema, primitiveParsers)
+val parser = new XmlParser(schema, StringParsers.primitiveParsers)
 val record: GenericData.Record = parser(data)
 val bytes: Array[Byte] = toBytes(record)
 ```

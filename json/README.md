@@ -36,24 +36,12 @@ and `2.13`
         * `timestamp-millis`
         * `timestamp-micros`
 
-### [RandomData](../core/src/main/scala/io/github/agolovenko/avro/RandomData.scala) - given the schema generates a random avro record
-
-* inspired by `org.apache.avro.util.RandomData`
-* allows custom generators by field name or by type
-* predefined generators for some `Logical Types`:
-    * `date`
-    * `time-millis`
-    * `time-micros`
-    * `timestamp-millis`
-    * `timestamp-micros`
-
 ## Usage
 
 ### build.sbt:
 
 ```sbt
-libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-json" % "0.1.0"
-
+libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-json" % "0.2.0"
 ```
 
 ### code:
@@ -65,9 +53,7 @@ import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData
 import play.api.libs.json.{JsObject, Json}
 
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import scala.util.Random
 
 val schema = new Schema.Parser().parse(
   """
@@ -88,7 +74,7 @@ val schema = new Schema.Parser().parse(
 
 // JsonParser example
 
-import StringParsers._
+import io.github.agolovenko.avro.StringParsers._
 
 val data = Json.parse("""{"field1": [12, 14]}""")
 val parser = new JsonParser(schema, primitiveParsers ++ base64Parsers)
@@ -97,18 +83,10 @@ val bytes: Array[Byte] = toBytes(record)
 
 // JsonEncoder example
 
-import StringEncoders._
+import io.github.agolovenko.avro.StringEncoders._
 
 val encoder = new JsonEncoder(base64Encoders ++ dateEncoder(DateTimeFormatter.ISO_DATE))
 val json: JsObject = encoder(record)
-
-// RandomData example
-
-import RandomData._
-
-val namedGenerators: Map[Path, Random => Any] = Map(Path("a", "past") -> (implicit random => randomDay(LocalDate.now().minusDays(30), maxDays = 30)))
-val typedGenerators = timeGenerators ++ dateGenerator(fromDate = LocalDate.now(), maxDays = 10)
-val records: Iterator[GenericData.Record] = new RandomData(schema, total = 1 << 10, typedGenerators, namedGenerators).map(_.asInstanceOf[GenericData.Record])
 ```
 
 For more examples check out the [tests](src/test/scala/io/github/agolovenko/avro/json)!

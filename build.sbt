@@ -1,16 +1,16 @@
 import sbt.Keys.scalaVersion
 import sbt.Opts.resolver.{sonatypeSnapshots, sonatypeStaging}
 
-lazy val scala213 = "2.13.6"
-lazy val scala212 = "2.12.15"
-lazy val scala211 = "2.11.12"
+lazy val scala213               = "2.13.6"
+lazy val scala212               = "2.12.15"
+lazy val scala211               = "2.11.12"
 lazy val supportedScalaVersions = Seq(scala213, scala212, scala211)
 
 lazy val baseName = "avro-tools"
 
 organization := "io.github.agolovenko"
-homepage := Some(url("https://github.com/agolovenko/avro-json-tools"))
-scmInfo := Some(ScmInfo(url("https://github.com/agolovenko/avro-json-tools"), "git@github.com:agolovenko/avro-json-tools.git"))
+homepage := Some(url("https://github.com/agolovenko/avro-tools"))
+scmInfo := Some(ScmInfo(url("https://github.com/agolovenko/avro-tools"), "git@github.com:agolovenko/avro-tools.git"))
 developers := List(Developer("agolovenko", "agolovenko", "ashotik@gmail.com", url("https://github.com/agolovenko")))
 licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
 scalacOptions ++= Seq(
@@ -22,7 +22,7 @@ scalacOptions ++= Seq(
   "-Ywarn-dead-code",
   "-Ywarn-numeric-widen",
   "-Ywarn-value-discard",
-  //      "-Ywarn-unused"
+  "-Ywarn-unused"
 )
 publishMavenStyle := true
 scalaVersion := scala212
@@ -44,7 +44,8 @@ lazy val json = project
     name := s"$baseName-json",
     libraryDependencies ++= new Dependencies(scalaVersion.value).json,
     publishTo := Some(if (isSnapshot.value) sonatypeSnapshots else sonatypeStaging)
-  ).dependsOn(core)
+  )
+  .dependsOn(core)
 
 lazy val xml = project
   .in(file("xml"))
@@ -53,7 +54,8 @@ lazy val xml = project
     name := s"$baseName-xml",
     libraryDependencies ++= new Dependencies(scalaVersion.value).xml,
     publishTo := Some(if (isSnapshot.value) sonatypeSnapshots else sonatypeStaging)
-  ).dependsOn(core)
+  )
+  .dependsOn(core)
 
 lazy val root = project
   .in(file("."))
@@ -61,5 +63,6 @@ lazy val root = project
   .settings(
     name := baseName,
     publish := {},
-    publishLocal := {},
-  ).aggregate(core, json, xml)
+    publishLocal := {}
+  )
+  .aggregate(core, json, xml)
