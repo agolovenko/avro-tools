@@ -1,3 +1,4 @@
+import com.jsuereth.sbtpgp.PgpKeys.publishSigned
 import sbt.Keys.scalaVersion
 import sbt.Opts.resolver.{sonatypeSnapshots, sonatypeStaging}
 
@@ -63,6 +64,7 @@ lazy val root = project
   .settings(
     name := baseName,
     publish := {},
-    publishLocal := {}
+    publishLocal := {},
+    publishSigned := {}
   )
   .aggregate(core, json, xml)
