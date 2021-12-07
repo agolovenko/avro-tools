@@ -1,6 +1,6 @@
 package io.github.agolovenko.avro.json
 
-import io.github.agolovenko.avro.{StringParsers, toBase64}
+import io.github.agolovenko.avro.{MissingValueException, StringParsers, WrongTypeException, toBase64}
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData
 import org.scalatest.matchers.should.Matchers

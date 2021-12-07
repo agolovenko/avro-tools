@@ -17,7 +17,7 @@ ThisBuild / licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICEN
 ThisBuild / publishMavenStyle := true
 ThisBuild / publishConfiguration := publishConfiguration.value.withOverwrite(true)
 ThisBuild / publishTo := Some(if (isSnapshot.value) sonatypeSnapshots else sonatypeStaging)
-ThisBuild / scalaVersion := scala212
+ThisBuild / scalaVersion := scala213
 ThisBuild / crossScalaVersions := supportedScalaVersions
 ThisBuild / versionScheme := Some("early-semver")
 

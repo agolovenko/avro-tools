@@ -1,6 +1,6 @@
 package io.github.agolovenko.avro
 
-import scala.xml.{Node, NodeSeq, Text}
+import scala.xml.{Elem, Node, NodeSeq, Text}
 
 package object xml {
   object SingleNode {
@@ -16,7 +16,14 @@ package object xml {
   }
 
   object TextNode {
-    def unapply(data: NodeSeq): Option[String] = SingleNode.unapply(data).flatMap { node => toText(Some(node.child)) }
+    def unapply(data: NodeSeq): Option[String] = {
+      val childNodes = data match {
+        case SingleNode(elem: Elem) => Some(elem.child)
+        case _                      => None
+      }
+
+      toText(childNodes)
+    }
 
     def toText(nodes: Option[Seq[Node]]): Option[String] = nodes.collect {
       case (textNode: Text) :: Nil => textNode.text

@@ -1,5 +1,6 @@
 package io.github.agolovenko.avro.json
 
+import io.github.agolovenko.avro.{MissingValueException, ParserException}
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData
 import org.scalatest.matchers.should.Matchers
@@ -33,7 +34,7 @@ class EnumSpec extends AnyWordSpec with Matchers {
 
   "fails on invalid value" in {
     val data = Json.parse("""{"field1": "ev33"}""")
-    a[JsonParserException] should be thrownBy new JsonParser(schema)(data)
+    a[ParserException] should be thrownBy new JsonParser(schema)(data)
   }
 
   "applies default value" in {

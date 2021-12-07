@@ -1,13 +1,10 @@
 package io.github.agolovenko.avro.xml
 
-import io.github.agolovenko.avro.{FieldRenamings, Path, typeName}
+import io.github.agolovenko.avro._
+import org.apache.avro.Schema
 import org.apache.avro.Schema.Type._
 import org.apache.avro.generic.GenericData
-import org.apache.avro.{JsonProperties, Schema}
 
-import java.lang.{Boolean => JBool, Double => JDouble, Float => JFloat, Integer => JInt, Long => JLong}
-import java.nio.ByteBuffer
-import java.util.{List => JList, Map => JMap}
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 import scala.util.control.NonFatal
@@ -18,15 +15,15 @@ class XmlParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.
     implicit val path: Path = new Path
     if (schema.getType == RECORD)
       if (schema.getName == data.label) readRecord(data, schema, defaultValue = None)
-      else throw new XmlParserException(s"Expected '${schema.getName}' root node, got instead: '${data.label}'")
-    else throw new XmlParserException(s"Unsupported root schema of type ${schema.getType}")
+      else throw new ParserException(s"Expected '${schema.getName}' root node, got instead: '${data.label}'")
+    else throw new ParserException(s"Unsupported root schema of type ${schema.getType}")
   }
 
   private def readAny(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Any =
     schema.getType match {
       case RECORD  => readRecord(data, schema, defaultValue)
       case ENUM    => readEnum(data, attributes, schema, defaultValue)
-      case MAP     => throw new XmlParserException("'MAP' type is not supported for XML format")
+      case MAP     => throw new ParserException("'MAP' type is not supported for XML format")
       case ARRAY   => readArray(data, schema, defaultValue)
       case UNION   => readUnion(data, attributes, schema, defaultValue)
       case BYTES   => readBytes(data, attributes, schema, defaultValue)
@@ -48,13 +45,17 @@ class XmlParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.
         schema.getFields.asScala.foreach { field =>
           val fieldName = fieldRenamings(field.name())
           path.push(fieldName)
-          val value = readAny(elem \ fieldName, elem.attributes.get(field.name()).map(_.toSeq), field.schema(), Option(field.defaultVal()))
-          result.put(field.name(), value)
-          path.pop()
+          try {
+            val value = readAny(elem \ fieldName, elem.attributes.get(field.name()).map(_.toSeq), field.schema(), Option(field.defaultVal()))
+            result.put(field.name(), value)
+          } finally {
+            path.pop()
+            ()
+          }
         }
         result
       case NoNode(_) => fallbackToDefault(defaultValue, schema).asInstanceOf[GenericData.Record]
-      case _         => throw new WrongTypeException(schema, data)
+      case _         => throw new WrongTypeException(schema, data.toString())
     }
 
   private def readEnum(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(
@@ -63,7 +64,7 @@ class XmlParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.
     val symbol = read(data, attributes, schema, defaultValue)
 
     if (schema.getEnumSymbols.contains(symbol)) new GenericData.EnumSymbol(schema, symbol)
-    else throw new WrongTypeException(schema, data)
+    else throw new WrongTypeException(schema, data.toString())
   }
 
   private def readArray(data: NodeSeq, schema: Schema, defaultValue: Option[Any])(implicit path: Path): GenericData.Array[Any] = {
@@ -76,7 +77,7 @@ class XmlParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.
       case SingleNode(elem: Elem) if elem.label != elemLabel => parseArray(elem.child, schema)
       case NoNode(_)                                         => fallbackToDefault(defaultValue, schema).asInstanceOf[GenericData.Array[Any]]
       case nodes if nodes.forall(_.label == elemLabel)       => parseArray(nodes, schema)
-      case _                                                 => throw new WrongTypeException(schema, data)
+      case _                                                 => throw new WrongTypeException(schema, data.toString())
     }
   }
 
@@ -87,9 +88,13 @@ class XmlParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.
     elems.zipWithIndex.foreach {
       case (child, idx) =>
         path.push(s"[$idx]")
-        val value = readAny(child, attributes = None, schema.getElementType, None)
-        result.add(idx, value)
-        path.pop()
+        try {
+          val value = readAny(child, attributes = None, schema.getElementType, None)
+          result.add(idx, value)
+        } finally {
+          path.pop()
+          ()
+        }
     }
     result
   }
@@ -104,8 +109,8 @@ class XmlParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.
     if (it.hasNext) it.next()
     else if (data.isEmpty) throw new MissingValueException(schema)
     else {
-      val explanation = unionIt.flatMap(_.failed.map(_.getMessage).toOption).mkString("; ")
-      throw new WrongTypeException(schema, data, Some(explanation))
+      val explanations = unionIt.flatMap(_.failed.map(_.getMessage).toOption).toSeq
+      throw new WrongTypeException(schema, data.toString(), explanations)
     }
   }
 
@@ -118,7 +123,7 @@ class XmlParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.
     val bytes = readBytes(data, attributes, schema, defaultValue).asInstanceOf[Array[Byte]]
 
     if (bytes.length == schema.getFixedSize) new GenericData.Fixed(schema, bytes)
-    else throw new WrongTypeException(schema, data, Some(s"incorrect size: ${bytes.length} instead of ${schema.getFixedSize}"))
+    else throw new WrongTypeException(schema, data.toString(), Seq(s"incorrect size: ${bytes.length} instead of ${schema.getFixedSize}"))
   }
 
   private def read(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Any =
@@ -130,57 +135,28 @@ class XmlParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.
           case NoNode(_)      => fallbackToDefault(defaultValue, schema)
           case EmptyNode(_)   => parseString("", schema, data)
           case TextNode(text) => parseString(text, schema, data)
-          case _              => throw new WrongTypeException(schema, data)
+          case _              => throw new WrongTypeException(schema, data.toString())
         }
       }
 
   private def parseString(str: String, schema: Schema, data: NodeSeq)(implicit path: Path): Any =
     if (schema.getType == STRING || schema.getType == ENUM) str
     else
-      stringParsers.get(typeName(schema)).fold(throw new WrongTypeException(schema, data, Some("no string parser supplied"))) { parser =>
+      stringParsers.get(typeName(schema)).fold(throw new WrongTypeException(schema, data.toString(), Seq("no string parser supplied"))) { parser =>
         try {
           parser(str)
         } catch {
-          case NonFatal(e) => throw new WrongTypeException(schema, data, Option(e.getMessage))
+          case NonFatal(e) => throw new WrongTypeException(schema, data.toString(), Seq(e.getMessage))
         }
       }
 
   private def readNull(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Null =
     data match {
       case NoNode(_) if attributes.isEmpty    => fallbackToDefault(defaultValue, schema).asInstanceOf[Null]
-      case EmptyNode(_) if attributes.isEmpty => fallbackToDefault(defaultValue, schema).asInstanceOf[Null]
-      case _                                  => throw new WrongTypeException(schema, data)
+      case EmptyNode(_) if attributes.isEmpty => null
+      case _                                  => throw new WrongTypeException(schema, data.toString())
     }
 
   private def fallbackToDefault(defaultValue: Option[Any], schema: Schema)(implicit path: Path): Any =
     defaultValue.fold(throw new MissingValueException(schema)) { extractDefaultValue(_, schema) }
-
-  private def extractDefaultValue(defaultValue: Any, schema: Schema)(implicit path: Path): Any = (schema.getType, defaultValue) match {
-    case (NULL, JsonProperties.NULL_VALUE) => null
-    case (STRING, value: String)           => value
-    case (ENUM, value: String)             => value
-    case (INT, value: JInt)                => value.intValue()
-    case (LONG, value: JLong)              => value.longValue()
-    case (FLOAT, value: JFloat)            => value.floatValue()
-    case (DOUBLE, value: JDouble)          => value.doubleValue()
-    case (BOOLEAN, value: JBool)           => value.booleanValue()
-    case (BYTES, value: Array[Byte])       => ByteBuffer.wrap(value)
-    case (FIXED, value: Array[Byte])       => value
-
-    case (ARRAY, list: JList[_]) =>
-      val extracted = list.asScala.map { extractDefaultValue(_, schema.getElementType) }
-      new GenericData.Array(schema, extracted.asJava)
-
-    case (RECORD, map: JMap[_, _]) =>
-      val result = new GenericData.Record(schema)
-      map.asScala.foreach {
-        case (k, value) =>
-          val key       = k.asInstanceOf[String]
-          val extracted = extractDefaultValue(value, schema.getField(key).schema())
-          result.put(key, extracted)
-      }
-      result
-
-    case _ => throw new XmlParserException(s"Unsupported default value $defaultValue for type ${schema.getType}")
-  }
 }

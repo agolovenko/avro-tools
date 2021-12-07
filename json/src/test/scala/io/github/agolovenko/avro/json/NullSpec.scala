@@ -1,5 +1,6 @@
 package io.github.agolovenko.avro.json
 
+import io.github.agolovenko.avro.{MissingValueException, WrongTypeException}
 import org.apache.avro.generic.GenericData
 import org.apache.avro.{JsonProperties, Schema}
 import org.scalatest.matchers.should.Matchers
