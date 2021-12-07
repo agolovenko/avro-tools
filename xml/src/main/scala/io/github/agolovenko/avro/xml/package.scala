@@ -1,21 +1,22 @@
 package io.github.agolovenko.avro
 
-import scala.xml.{Elem, Node, NodeSeq, Text}
+import scala.xml.{Node, NodeSeq, Text}
 
 package object xml {
-  object Single {
+  object SingleNode {
     def unapply(data: NodeSeq): Option[Node] = if (data.lengthCompare(1) == 0) Some(data.head) else None
   }
 
-  object TextNode {
-    def unapply(data: NodeSeq): Option[String] = {
-      val childNodes = data match {
-        case Single(elem: Elem) => Some(elem.child)
-        case _                  => None
-      }
+  object EmptyNode {
+    def unapply(data: NodeSeq): Option[Node] = SingleNode.unapply(data).filter(_.child.isEmpty)
+  }
 
-      toText(childNodes)
-    }
+  object NoNode {
+    def unapply(data: NodeSeq): Option[NodeSeq] = if (data.isEmpty) Some(data) else None
+  }
+
+  object TextNode {
+    def unapply(data: NodeSeq): Option[String] = SingleNode.unapply(data).flatMap { node => toText(Some(node.child)) }
 
     def toText(nodes: Option[Seq[Node]]): Option[String] = nodes.collect {
       case (textNode: Text) :: Nil => textNode.text

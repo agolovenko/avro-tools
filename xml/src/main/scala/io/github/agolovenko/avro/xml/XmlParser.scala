@@ -43,7 +43,7 @@ class XmlParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.
 
   private def readRecord(data: NodeSeq, schema: Schema, defaultValue: Option[Any])(implicit path: Path): GenericData.Record =
     data match {
-      case Single(elem: Elem) =>
+      case SingleNode(elem: Elem) =>
         val result = new GenericData.Record(schema)
         schema.getFields.asScala.foreach { field =>
           val fieldName = fieldRenamings(field.name())
@@ -53,8 +53,8 @@ class XmlParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.
           path.pop()
         }
         result
-      case nodes if nodes.isEmpty => fallbackToDefault(defaultValue, schema).asInstanceOf[GenericData.Record]
-      case _                      => throw new WrongTypeException(schema, data)
+      case NoNode(_) => fallbackToDefault(defaultValue, schema).asInstanceOf[GenericData.Record]
+      case _         => throw new WrongTypeException(schema, data)
     }
 
   private def readEnum(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(
@@ -73,10 +73,10 @@ class XmlParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.
       else path.peek
 
     data match {
-      case Single(elem: Elem) if elem.label != elemLabel => parseArray(elem.child, schema)
-      case nodes if nodes.isEmpty                        => fallbackToDefault(defaultValue, schema).asInstanceOf[GenericData.Array[Any]]
-      case nodes if nodes.forall(_.label == elemLabel)   => parseArray(nodes, schema)
-      case _                                             => throw new WrongTypeException(schema, data)
+      case SingleNode(elem: Elem) if elem.label != elemLabel => parseArray(elem.child, schema)
+      case NoNode(_)                                         => fallbackToDefault(defaultValue, schema).asInstanceOf[GenericData.Array[Any]]
+      case nodes if nodes.forall(_.label == elemLabel)       => parseArray(nodes, schema)
+      case _                                                 => throw new WrongTypeException(schema, data)
     }
   }
 
@@ -127,9 +127,10 @@ class XmlParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.
       .map(parseString(_, schema, data))
       .getOrElse {
         data match {
-          case TextNode(text)         => parseString(text, schema, data)
-          case nodes if nodes.isEmpty => fallbackToDefault(defaultValue, schema)
-          case _                      => throw new WrongTypeException(schema, data)
+          case NoNode(_)      => fallbackToDefault(defaultValue, schema)
+          case EmptyNode(_)   => parseString("", schema, data)
+          case TextNode(text) => parseString(text, schema, data)
+          case _              => throw new WrongTypeException(schema, data)
         }
       }
 
@@ -145,8 +146,11 @@ class XmlParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.
       }
 
   private def readNull(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Null =
-    if (data.isEmpty && attributes.isEmpty) fallbackToDefault(defaultValue, schema).asInstanceOf[Null]
-    else throw new WrongTypeException(schema, data)
+    data match {
+      case NoNode(_) if attributes.isEmpty    => fallbackToDefault(defaultValue, schema).asInstanceOf[Null]
+      case EmptyNode(_) if attributes.isEmpty => fallbackToDefault(defaultValue, schema).asInstanceOf[Null]
+      case _                                  => throw new WrongTypeException(schema, data)
+    }
 
   private def fallbackToDefault(defaultValue: Option[Any], schema: Schema)(implicit path: Path): Any =
     defaultValue.fold(throw new MissingValueException(schema)) { extractDefaultValue(_, schema) }
