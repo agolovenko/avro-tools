@@ -59,6 +59,15 @@ lazy val xml = project
   )
   .dependsOn(core)
 
+lazy val csv = project
+  .in(file("csv"))
+  .enablePlugins(GitVersioning)
+  .settings(
+    name := s"$baseName-csv",
+    libraryDependencies ++= new Dependencies(scalaVersion.value).csv
+  )
+  .dependsOn(core)
+
 lazy val root = project
   .in(file("."))
   .enablePlugins(GitVersioning)
@@ -68,4 +77,4 @@ lazy val root = project
     publishLocal := {},
     publishSigned := {}
   )
-  .aggregate(core, json, xml)
+  .aggregate(core, json, xml, csv)
