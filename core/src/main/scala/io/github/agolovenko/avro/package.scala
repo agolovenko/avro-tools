@@ -44,7 +44,10 @@ package object avro {
 
   def toBase64(bytes: Array[Byte]): String = new String(Base64.getEncoder.encode(bytes), StandardCharsets.UTF_8)
 
-  private[avro] def extractDefaultValue(defaultValue: Any, schema: Schema)(implicit path: Path): Any = (schema.getType, defaultValue) match {
+  private[avro] def fallbackToDefault(defaultValue: Option[Any], schema: Schema)(implicit path: Path): Any =
+    defaultValue.fold(throw new MissingValueException(schema)) { extractDefaultValue(_, schema) }
+
+  private def extractDefaultValue(defaultValue: Any, schema: Schema)(implicit path: Path): Any = (schema.getType, defaultValue) match {
     case (NULL, JsonProperties.NULL_VALUE) => null
     case (STRING, value: String)           => value
     case (ENUM, value: String)             => value

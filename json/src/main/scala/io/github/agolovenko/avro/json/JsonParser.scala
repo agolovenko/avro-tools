@@ -162,7 +162,4 @@ class JsonParser(schema: Schema, stringParsers: Map[String, String => Any] = Map
     case JsDefined(otherNode) => throw new WrongTypeException(schema, otherNode.toString())
     case _                    => fallbackToDefault(defaultValue, schema).asInstanceOf[Null]
   }
-
-  private def fallbackToDefault(defaultValue: Option[Any], schema: Schema)(implicit path: Path): Any =
-    defaultValue.fold(throw new MissingValueException(schema)) { extractDefaultValue(_, schema) }
 }

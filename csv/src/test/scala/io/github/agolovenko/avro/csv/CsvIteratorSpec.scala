@@ -5,6 +5,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 import java.io.ByteArrayInputStream
+import java.nio.charset.StandardCharsets.UTF_8
 
 class CsvIteratorSpec extends AnyWordSpec with Matchers {
   "handles empty input" in {
@@ -14,6 +15,6 @@ class CsvIteratorSpec extends AnyWordSpec with Matchers {
     settings.setReadInputOnSeparateThread(false)
     settings.setNumberOfRowsToSkip(1L)
 
-    CsvIterator(settings)(new ByteArrayInputStream(Array.empty[Byte])) shouldBe empty
+    CsvIterator(settings, UTF_8)(new ByteArrayInputStream(Array.empty[Byte])) shouldBe empty
   }
 }

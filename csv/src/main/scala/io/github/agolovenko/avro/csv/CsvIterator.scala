@@ -5,7 +5,7 @@ import com.univocity.parsers.csv.{CsvParser, CsvParserSettings}
 import com.univocity.parsers.tsv.{TsvParser, TsvParserSettings}
 
 import java.io.InputStream
-import java.nio.charset.{Charset, StandardCharsets}
+import java.nio.charset.Charset
 
 class CsvIterator private (parser: AbstractParser[_], customHeaders: Option[Array[String]]) extends Iterator[CsvRow] {
   private val headers   = customHeaders.getOrElse(parser.parseNext())
@@ -30,7 +30,7 @@ class CsvIterator private (parser: AbstractParser[_], customHeaders: Option[Arra
 }
 
 object CsvIterator {
-  def apply[S <: CommonParserSettings[_]](settings: S, encoding: Charset = StandardCharsets.UTF_8, customHeaders: Option[Array[String]] = None)(
+  def apply[S <: CommonParserSettings[_]](settings: S, encoding: Charset, customHeaders: Option[Array[String]] = None)(
       is: => InputStream
   ): CsvIterator = {
     val parser = settings match {
