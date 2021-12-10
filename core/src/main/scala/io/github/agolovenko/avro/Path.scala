@@ -11,10 +11,11 @@ class Path {
   def clear(): Unit                 = pathStack.clear()
   def peek: String                  = pathStack.top
 
-  def iterator(withArrayIdx: Boolean): Iterator[String] =
-    if (withArrayIdx) pathStack.reverseIterator else pathStack.reverseIterator.filterNot(_.startsWith("["))
+  def mkString(withArrayIdx: Boolean): String = {
+    val it = if (withArrayIdx) pathStack.reverseIterator else pathStack.reverseIterator.filterNot(_.startsWith("["))
 
-  def mkString(withArrayIdx: Boolean): String = iterator(withArrayIdx).mkString("/", "/", "")
+    it.mkString("/", "/", "")
+  }
 
   override def toString: String = mkString(withArrayIdx = true)
 

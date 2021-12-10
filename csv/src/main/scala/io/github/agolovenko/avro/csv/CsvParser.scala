@@ -12,6 +12,7 @@ import scala.util.control.NonFatal
 class CsvParser(
     schema: Schema,
     arrayDelimiter: Option[Char],
+    recordDelimiter: Option[Char],
     stringParsers: Map[String, String => Any] = Map.empty,
     fieldRenamings: FieldRenamings = new FieldRenamings()
 ) {
@@ -22,25 +23,35 @@ class CsvParser(
     else throw new ParserException(s"Unsupported root schema of type ${schema.getType}")
   }
 
-  private def readRecord(data: CsvRow, schema: Schema, defaultValue: Option[Any])(implicit path: Path): GenericData.Record = {
-    val result = new GenericData.Record(schema)
-    schema.getFields.asScala.foreach { field =>
-      val fieldName = fieldRenamings(field.name())
-      path.push(fieldName)
-      try {
-        val value = readAny(data.get(fieldName), field.schema(), Option(field.defaultVal()))
-        result.put(field.name(), value)
-      } finally {
-        path.pop()
-        ()
+  private def readRecord(data: CsvData, schema: Schema, defaultValue: Option[Any])(implicit path: Path): GenericData.Record = {
+    if (data.isEmpty) fallbackToDefault(defaultValue, schema).asInstanceOf[GenericData.Record]
+    else {
+      val result = new GenericData.Record(schema)
+      schema.getFields.asScala.foreach { field =>
+        val fieldName = fieldRenamings(field.name())
+        path.push(fieldName)
+
+        try {
+          val value = if (field.schema().getType == RECORD) {
+            val delimiter = recordDelimiter
+              .getOrElse(throw new ParserException("Nested 'RECORD' type is only supported when 'recordDelimiter' is provided"))
+
+            readRecord(new PrefixFilteringCsvData(data, s"$fieldName$delimiter"), field.schema(), Option(field.defaultVal()))
+          } else readAny(data.get(fieldName), field.schema(), Option(field.defaultVal()))
+
+          result.put(field.name(), value)
+        } finally {
+          path.pop()
+          ()
+        }
       }
+      result
     }
-    result
   }
 
   private def readAny(data: Option[String], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Any =
     schema.getType match {
-      case RECORD  => throw new ParserException("'RECORD' type is not supported for CSV format")
+      case RECORD  => throw new ParserException("'RECORD' type is not allowed while parsing flat data")
       case ENUM    => readEnum(data, schema, defaultValue)
       case MAP     => throw new ParserException("'MAP' type is not supported for CSV format")
       case ARRAY   => readArray(data, schema, defaultValue)

@@ -1,15 +1,17 @@
 package io.github.agolovenko.avro.csv
 
 import com.univocity.parsers.common.{AbstractParser, CommonParserSettings}
-import com.univocity.parsers.csv.{CsvParser, CsvParserSettings}
-import com.univocity.parsers.tsv.{TsvParser, TsvParserSettings}
+import com.univocity.parsers.csv.{CsvParserSettings, CsvParser => UnivocityCsvParser}
+import com.univocity.parsers.tsv.{TsvParserSettings, TsvParser => UnivocityTsvParser}
 
 import java.io.InputStream
 import java.nio.charset.Charset
 
 class CsvIterator private (parser: AbstractParser[_], customHeaders: Option[Array[String]]) extends Iterator[CsvRow] {
-  private val headers   = customHeaders.getOrElse(parser.parseNext())
-  private val headerMap = if (headers == null) null else headers.zipWithIndex.toMap
+  private val headerMap = {
+    val headers = customHeaders.getOrElse(parser.parseNext())
+    if (headers == null) null else headers.zipWithIndex.toMap
+  }
 
   private var nextTokens = parser.parseNext()
 
@@ -25,7 +27,7 @@ class CsvIterator private (parser: AbstractParser[_], customHeaders: Option[Arra
 
     nextTokens = parser.parseNext()
 
-    new CsvRow(headers, headerMap, tokens)
+    new CsvRow(headerMap, tokens)
   }
 }
 
@@ -34,8 +36,8 @@ object CsvIterator {
       is: => InputStream
   ): CsvIterator = {
     val parser = settings match {
-      case csvSettings: CsvParserSettings => new CsvParser(csvSettings)
-      case tsvSettings: TsvParserSettings => new TsvParser(tsvSettings)
+      case csvSettings: CsvParserSettings => new UnivocityCsvParser(csvSettings)
+      case tsvSettings: TsvParserSettings => new UnivocityTsvParser(tsvSettings)
       case unsupported                    => throw new CsvException(s"Unsupported settings type: ${unsupported.getClass.getName}")
     }
 

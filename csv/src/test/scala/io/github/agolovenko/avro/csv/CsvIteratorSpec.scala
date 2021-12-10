@@ -10,8 +10,6 @@ import java.nio.charset.StandardCharsets.UTF_8
 class CsvIteratorSpec extends AnyWordSpec with Matchers {
   "handles empty input" in {
     val settings = new CsvParserSettings()
-    settings.setKeepQuotes(false)
-    settings.setDelimiterDetectionEnabled(true, ',', ';')
     settings.setReadInputOnSeparateThread(false)
     settings.setNumberOfRowsToSkip(1L)
 
