@@ -8,4 +8,4 @@ and `2.13`
 * [Core](core/README.md) - Base common utilities
 * [JSON](json/README.md) - Set of tools for JSON to Avro conversions
 * [XML](xml/README.md)   - Set of tools for XML to Avro conversions
-* CSV - Set of tools for CSV to Avro conversions (TBD)
+* [CSV](csv/README.md)   - Set of tools for CSV to Avro conversions

@@ -21,7 +21,7 @@ Base utilities for Avro conversion projects.
 ### build.sbt:
 
 ```sbt
-libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-core" % "0.2.0"
+libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-core" % "0.3.0"
 
 ```
 
