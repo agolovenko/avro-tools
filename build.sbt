@@ -2,7 +2,7 @@ import com.jsuereth.sbtpgp.PgpKeys.publishSigned
 import sbt.Keys.scalaVersion
 import sbt.Opts.resolver.{sonatypeSnapshots, sonatypeStaging}
 
-lazy val scala213               = "2.13.6"
+lazy val scala213               = "2.13.7"
 lazy val scala212               = "2.12.15"
 lazy val scala211               = "2.11.12"
 lazy val supportedScalaVersions = Seq(scala213, scala212, scala211)
@@ -59,6 +59,15 @@ lazy val xml = project
   )
   .dependsOn(core)
 
+lazy val csv = project
+  .in(file("csv"))
+  .enablePlugins(GitVersioning)
+  .settings(
+    name := s"$baseName-csv",
+    libraryDependencies ++= new Dependencies(scalaVersion.value).csv
+  )
+  .dependsOn(core)
+
 lazy val root = project
   .in(file("."))
   .enablePlugins(GitVersioning)
@@ -68,4 +77,4 @@ lazy val root = project
     publishLocal := {},
     publishSigned := {}
   )
-  .aggregate(core, json, xml)
+  .aggregate(core, json, xml, csv)

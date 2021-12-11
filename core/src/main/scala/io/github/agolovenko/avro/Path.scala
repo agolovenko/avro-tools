@@ -13,6 +13,7 @@ class Path {
 
   def mkString(withArrayIdx: Boolean): String = {
     val it = if (withArrayIdx) pathStack.reverseIterator else pathStack.reverseIterator.filterNot(_.startsWith("["))
+
     it.mkString("/", "/", "")
   }
 

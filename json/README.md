@@ -21,7 +21,7 @@ and `2.13`
         * `time-micros`
         * `timestamp-millis`
         * `timestamp-micros`
-* Comprehensive Exceptions: General/Missing Value/Wrong Type. All containing JSON path and description
+* Comprehensive Exceptions: General/Missing Value/Wrong Type. All containing path and description
 
 ### [JsonEncoder](src/main/scala/io/github/agolovenko/avro/json/JsonEncoder.scala) - encodes avro's `GenericData.Record` into Json object
 
@@ -41,7 +41,7 @@ and `2.13`
 ### build.sbt:
 
 ```sbt
-libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-json" % "0.2.0"
+libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-json" % "0.3.0"
 ```
 
 ### code:

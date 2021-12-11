@@ -20,14 +20,14 @@ Set of tools for XML to Avro conversions written in Scala using scala-xml. Avail
         * `time-micros`
         * `timestamp-millis`
         * `timestamp-micros`
-* Comprehensive Exceptions: General/Missing Value/Wrong Type. All containing JSON path and description
+* Comprehensive Exceptions: General/Missing Value/Wrong Type. All containing path and description
 
 ## Usage
 
 ### build.sbt:
 
 ```sbt
-libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-xml" % "0.2.0"
+libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-xml" % "0.3.0"
 ```
 
 ### code:

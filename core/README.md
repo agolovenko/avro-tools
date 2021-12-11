@@ -8,7 +8,8 @@ Base utilities for Avro conversion projects.
 
 * inspired by `org.apache.avro.util.RandomData`
 * allows custom generators by field name or by type
-* predefined generators for some `Logical Types`:
+* predefined generators for some `Logical Types`: 
+  * `uuid`
   * `date`
   * `time-millis`
   * `time-micros`
@@ -20,7 +21,7 @@ Base utilities for Avro conversion projects.
 ### build.sbt:
 
 ```sbt
-libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-core" % "0.2.0"
+libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-core" % "0.3.0"
 
 ```
 

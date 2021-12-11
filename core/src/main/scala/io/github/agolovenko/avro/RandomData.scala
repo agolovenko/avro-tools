@@ -7,6 +7,7 @@ import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.time.{LocalDate, ZoneId}
 import java.util
+import java.util.UUID
 import scala.jdk.CollectionConverters._
 import scala.util.Random
 
@@ -114,6 +115,15 @@ object RandomData {
 
   def randomMillisOfDay(implicit random: Random): Int  = random.nextInt(24 * 3600 * 1000)
   def randomMicrosOfDay(implicit random: Random): Long = randomMillisOfDay(random).toLong * random.nextInt(1000)
+
+  val uuidGenerator: Map[String, Random => Any] = Map(
+    LogicalTypes.uuid().getName -> (random => {
+      val mostSigBits  = (random.nextLong() & 0xFFFFFFFFFFFF0FFFL) | 0x0000000000004000L
+      val leastSigBits = (random.nextLong() | 0x8000000000000000L) & 0xBFFFFFFFFFFFFFFFL
+
+      new UUID(mostSigBits, leastSigBits).toString
+    })
+  )
 
   def dateGenerator(fromDate: LocalDate, maxDays: Int): Map[String, Random => Any] = Map(
     LogicalTypes.date().getName -> (implicit random => randomDay(fromDate, maxDays))

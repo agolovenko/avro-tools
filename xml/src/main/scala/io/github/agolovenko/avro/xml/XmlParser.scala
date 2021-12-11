@@ -156,7 +156,4 @@ class XmlParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.
       case EmptyNode(_) if attributes.isEmpty => null
       case _                                  => throw new WrongTypeException(schema, data.toString())
     }
-
-  private def fallbackToDefault(defaultValue: Option[Any], schema: Schema)(implicit path: Path): Any =
-    defaultValue.fold(throw new MissingValueException(schema)) { extractDefaultValue(_, schema) }
 }
