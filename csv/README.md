@@ -1,4 +1,4 @@
-# avro-tools-xml
+# avro-tools-csv
 
 Set of tools for CSV to Avro conversions written in Scala using Univocity CSV Parser. Available for scala `2.11`, `2.12`
 and `2.13`

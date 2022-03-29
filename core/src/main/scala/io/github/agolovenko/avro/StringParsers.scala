@@ -23,7 +23,7 @@ object StringParsers {
     FIXED.name() -> parseBase64
   )
 
-  def uuidParser: Map[String, String => String] = Map(
+  val uuidParser: Map[String, String => String] = Map(
     LogicalTypes.uuid().getName -> (UUID.fromString(_).toString)
   )
 
