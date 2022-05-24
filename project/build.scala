@@ -8,7 +8,7 @@ class Dependencies(scalaVersion: String) {
   private def playJson         = "com.typesafe.play"      %% "play-json"               % playJsonVersion
   private def scalaXml         = "org.scala-lang.modules" %% "scala-xml"               % "1.3.0"
   private def univocityParser  = "com.univocity"          % "univocity-parsers"        % "2.9.1"
-  private def scalaTest        = "org.scalatest"          %% "scalatest"               % "3.2.11"
+  private def scalaTest        = "org.scalatest"          %% "scalatest"               % "3.2.12"
 
   def core: Seq[ModuleID] = Seq(
     collectionCompat % Compile,
