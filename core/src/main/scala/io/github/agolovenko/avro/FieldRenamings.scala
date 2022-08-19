@@ -20,3 +20,7 @@ class FieldRenamings(rules: RenameRule*) {
       result
     } else avroName
 }
+
+object FieldRenamings {
+  val empty: FieldRenamings = new FieldRenamings()
+}

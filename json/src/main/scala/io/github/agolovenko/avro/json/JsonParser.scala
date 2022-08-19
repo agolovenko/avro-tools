@@ -9,34 +9,44 @@ import play.api.libs.json._
 import java.util.{HashMap => JHashMap, Map => JMap}
 import scala.jdk.CollectionConverters._
 import scala.util.Try
-import scala.util.control.NonFatal
 
-class JsonParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.empty, fieldRenamings: FieldRenamings = new FieldRenamings()) {
+class JsonParser(
+    schema: Schema,
+    stringParsers: PartialFunction[(String, Schema, Path), Any] = PartialFunction.empty,
+    validations: PartialFunction[(Any, Schema, Path), Unit] = PartialFunction.empty,
+    fieldRenamings: FieldRenamings = FieldRenamings.empty
+) extends AbstractParser(stringParsers, validations) {
   def apply(data: JsValue): GenericData.Record = {
     implicit val path: Path = new Path
     if (schema.getType == RECORD)
-      readRecord(JsDefined(data), schema, defaultValue = None)
+      readAny(JsDefined(data), schema, defaultValue = None).asInstanceOf[GenericData.Record]
     else
       throw new ParserException(s"Unsupported root schema of type ${schema.getType}")
   }
 
-  private def readAny(data: JsLookupResult, schema: Schema, defaultValue: Option[Any])(implicit path: Path): Any = schema.getType match {
-    case RECORD => readRecord(data, schema, defaultValue)
-    case ENUM   => readEnum(data, schema, defaultValue)
-    case ARRAY  => readArray(data, schema, defaultValue)
-    case MAP    => readMap(data, schema, defaultValue)
-    case UNION  => readUnion(data, schema, defaultValue)
-    case BYTES  => readBytes(data, schema, defaultValue)
-    case FIXED  => readFixed(data, schema, defaultValue)
+  private def readAny(data: JsLookupResult, schema: Schema, defaultValue: Option[Any])(implicit path: Path): Any = {
+    val result = schema.getType match {
+      case RECORD => readRecord(data, schema, defaultValue)
+      case ENUM   => readEnum(data, schema, defaultValue)
+      case ARRAY  => readArray(data, schema, defaultValue)
+      case MAP    => readMap(data, schema, defaultValue)
+      case UNION  => readUnion(data, schema, defaultValue)
+      case BYTES  => readBytes(data, schema, defaultValue)
+      case FIXED  => readFixed(data, schema, defaultValue)
 
-    case STRING  => read[String](data, schema, defaultValue)
-    case INT     => read[Int](data, schema, defaultValue)
-    case LONG    => read[Long](data, schema, defaultValue)
-    case FLOAT   => read[Float](data, schema, defaultValue)
-    case DOUBLE  => read[Double](data, schema, defaultValue)
-    case BOOLEAN => read[Boolean](data, schema, defaultValue)
+      case STRING  => read[String](data, schema, defaultValue)
+      case INT     => read[Int](data, schema, defaultValue)
+      case LONG    => read[Long](data, schema, defaultValue)
+      case FLOAT   => read[Float](data, schema, defaultValue)
+      case DOUBLE  => read[Double](data, schema, defaultValue)
+      case BOOLEAN => read[Boolean](data, schema, defaultValue)
 
-    case NULL => readNull(data, schema, defaultValue)
+      case NULL => readNull(data, schema, defaultValue)
+    }
+
+    validate(result, schema)
+
+    result
   }
 
   private def readRecord(data: JsLookupResult, schema: Schema, defaultValue: Option[Any])(implicit path: Path): GenericData.Record =
@@ -143,18 +153,6 @@ class JsonParser(schema: Schema, stringParsers: Map[String, String => Any] = Map
           valid = identity
         )
     case _ => fallbackToDefault(defaultValue, schema)
-  }
-
-  private def parseString(str: String, schema: Schema)(implicit path: Path): Any = {
-    if (schema.getType == STRING || schema.getType == ENUM) str
-    else
-      stringParsers.get(typeName(schema)).fold(throw new WrongTypeException(schema, str, Seq("no string parser supplied"))) { parser =>
-        try {
-          parser(str)
-        } catch {
-          case NonFatal(e) => throw new WrongTypeException(schema, str, Seq(e.getMessage))
-        }
-      }
   }
 
   private def readNull(data: JsLookupResult, schema: Schema, defaultValue: Option[Any])(implicit path: Path): Null = data match {

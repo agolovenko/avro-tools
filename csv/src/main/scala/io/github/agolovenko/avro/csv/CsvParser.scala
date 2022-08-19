@@ -7,15 +7,15 @@ import org.apache.avro.generic.GenericData
 
 import scala.jdk.CollectionConverters._
 import scala.util.Try
-import scala.util.control.NonFatal
 
 class CsvParser(
     schema: Schema,
     arrayDelimiter: Option[Char],
     recordDelimiter: Option[Char],
-    stringParsers: Map[String, String => Any] = Map.empty,
-    fieldRenamings: FieldRenamings = new FieldRenamings()
-) {
+    stringParsers: PartialFunction[(String, Schema, Path), Any] = PartialFunction.empty,
+    validations: PartialFunction[(Any, Schema, Path), Unit] = PartialFunction.empty,
+    fieldRenamings: FieldRenamings = FieldRenamings.empty
+) extends AbstractParser(stringParsers, validations) {
   def apply(data: CsvRow): GenericData.Record = {
     implicit val path: Path = new Path
     if (schema.getType == RECORD)
@@ -45,12 +45,15 @@ class CsvParser(
           ()
         }
       }
+
+      validate(result, schema)
+
       result
     }
   }
 
-  private def readAny(data: Option[String], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Any =
-    schema.getType match {
+  private def readAny(data: Option[String], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Any = {
+    val result = schema.getType match {
       case RECORD  => throw new ParserException("'RECORD' type is not allowed while parsing flat data")
       case ENUM    => readEnum(data, schema, defaultValue)
       case MAP     => throw new ParserException("'MAP' type is not supported for CSV format")
@@ -67,6 +70,11 @@ class CsvParser(
 
       case NULL => readNull(data, schema, defaultValue)
     }
+
+    validate(result, schema)
+
+    result
+  }
 
   private def readEnum(data: Option[String], schema: Schema, defaultValue: Option[Any])(
       implicit path: Path
@@ -131,19 +139,8 @@ class CsvParser(
   private def read(data: Option[String], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Any =
     data match {
       case None | Some(null) => fallbackToDefault(defaultValue, schema)
-      case Some(str)         => parseString(str, schema, data)
+      case Some(str)         => parseString(str, schema)
     }
-
-  private def parseString(str: String, schema: Schema, data: Option[String])(implicit path: Path): Any =
-    if (schema.getType == STRING || schema.getType == ENUM) str
-    else
-      stringParsers.get(typeName(schema)).fold(throw new WrongTypeException(schema, data.toString, Seq("no string parser supplied"))) { parser =>
-        try {
-          parser(str)
-        } catch {
-          case NonFatal(e) => throw new WrongTypeException(schema, data.toString, Seq(e.getMessage))
-        }
-      }
 
   private def readNull(data: Option[String], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Null =
     data match {

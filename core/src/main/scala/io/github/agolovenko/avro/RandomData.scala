@@ -14,17 +14,16 @@ import scala.util.Random
 class RandomData(
     rootSchema: Schema,
     total: Int,
-    typedGenerators: Map[String, Random => Any] = Map.empty,
-    namedGenerators: Map[Path, Random => Any] = Map.empty,
+    generators: PartialFunction[(Schema, Path, Random), Any],
     seed: Long = System.currentTimeMillis,
     maxLength: Int = 1 << 4
 ) extends Iterator[Any] {
   import Schema.Type._
 
-  private var count        = 0
-  private val random       = new Random(seed)
-  private val path         = new Path
-  private val namedGensMap = namedGenerators.map { case (path, gen) => path.mkString(withArrayIdx = false) -> gen }
+  private var count            = 0
+  private val random           = new Random(seed)
+  private val path             = new Path
+  private val liftedGenerators = generators.lift
 
   override def hasNext: Boolean = count < total
 
@@ -34,12 +33,8 @@ class RandomData(
     generate(rootSchema)
   }
 
-  private def namedGenerator                 = if (namedGensMap.nonEmpty) namedGensMap.get(path.mkString(withArrayIdx = false)) else None
-  private def typedGenerator(schema: Schema) = if (typedGenerators.nonEmpty) typedGenerators.get(typeName(schema)) else None
-
   private def generate(schema: Schema): Any =
-    namedGenerator
-      .orElse(typedGenerator(schema))
+    liftedGenerators((schema, path, random))
       .fold {
         schema.getType match {
           case RECORD =>
@@ -87,9 +82,7 @@ class RandomData(
           case BOOLEAN => random.nextBoolean()
           case NULL    => null
         }
-      } { generator =>
-        val result = generator(random)
-
+      } { result =>
         if (!GenericData.get().validate(schema, result))
           throw new IllegalArgumentException(s"Generated value $result isn't of type ${typeName(schema)} @ $path")
 
@@ -116,26 +109,27 @@ object RandomData {
   def randomMillisOfDay(implicit random: Random): Int  = random.nextInt(24 * 3600 * 1000)
   def randomMicrosOfDay(implicit random: Random): Long = randomMillisOfDay(random).toLong * random.nextInt(1000)
 
-  val uuidGenerator: Map[String, Random => Any] = Map(
-    LogicalTypes.uuid().getName -> (random => {
+  val uuidGenerator: PartialFunction[(Schema, Path, Random), String] = {
+    case (schema, _, random) if schema.getLogicalType == LogicalTypes.uuid() =>
       val mostSigBits  = (random.nextLong() & 0xFFFFFFFFFFFF0FFFL) | 0x0000000000004000L
       val leastSigBits = (random.nextLong() | 0x8000000000000000L) & 0xBFFFFFFFFFFFFFFFL
 
       new UUID(mostSigBits, leastSigBits).toString
-    })
-  )
+  }
 
-  def dateGenerator(fromDate: LocalDate, maxDays: Int): Map[String, Random => Any] = Map(
-    LogicalTypes.date().getName -> (implicit random => randomDay(fromDate, maxDays))
-  )
+  def dateGenerator(fromDate: LocalDate, maxDays: Int): PartialFunction[(Schema, Path, Random), Int] = {
+    case (schema, _, random) if schema.getLogicalType == LogicalTypes.date() => randomDay(fromDate, maxDays)(random)
+  }
 
-  val timeGenerators: Map[String, Random => Any] = Map(
-    LogicalTypes.timeMillis().getName -> (implicit random => randomMillisOfDay),
-    LogicalTypes.timeMicros().getName -> (implicit random => randomMicrosOfDay)
-  )
+  val timeGenerators: PartialFunction[(Schema, Path, Random), AnyVal] = {
+    case (schema, _, random) if schema.getLogicalType == LogicalTypes.timeMillis() => randomMillisOfDay(random)
+    case (schema, _, random) if schema.getLogicalType == LogicalTypes.timeMicros() => randomMicrosOfDay(random)
+  }
 
-  def dateTimeGenerators(fromDate: LocalDate, maxDays: Int, zoneId: ZoneId): Map[String, Random => Any] = Map(
-    LogicalTypes.timestampMillis().getName -> (implicit random => randomDayEpochSecond(fromDate, maxDays, zoneId) * 1000L + randomMillisOfDay),
-    LogicalTypes.timestampMicros().getName -> (implicit random => randomDayEpochSecond(fromDate, maxDays, zoneId) * 1000000L + randomMicrosOfDay)
-  )
+  def dateTimeGenerators(fromDate: LocalDate, maxDays: Int, zoneId: ZoneId): PartialFunction[(Schema, Path, Random), Long] = {
+    case (schema, _, random) if schema.getLogicalType == LogicalTypes.timestampMillis() =>
+      randomDayEpochSecond(fromDate, maxDays, zoneId)(random) * 1000L + randomMillisOfDay(random)
+    case (schema, _, random) if schema.getLogicalType == LogicalTypes.timestampMicros() =>
+      randomDayEpochSecond(fromDate, maxDays, zoneId)(random) * 1000000L + randomMicrosOfDay(random)
+  }
 }

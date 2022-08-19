@@ -14,7 +14,6 @@ Set of tools for XML to Avro conversions written in Scala using scala-xml. Avail
     * numeric and boolean types
     * `BYTES` and `FIXED` as base64-strings
     * `Logical Types`:
-        * `uuid`
         * `date`
         * `time-millis`
         * `time-micros`
@@ -27,7 +26,7 @@ Set of tools for XML to Avro conversions written in Scala using scala-xml. Avail
 ### build.sbt:
 
 ```sbt
-libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-xml" % "0.3.0"
+libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-xml" % "0.4.0"
 ```
 
 ### code:

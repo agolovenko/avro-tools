@@ -15,12 +15,12 @@ and `2.13`
     * numeric and boolean types
     * `BYTES` and `FIXED` as base64-strings
     * `Logical Types`:
-        * `uuid`
         * `date`
         * `time-millis`
         * `time-micros`
         * `timestamp-millis`
         * `timestamp-micros`
+* Extendable validations
 * Comprehensive Exceptions: General/Missing Value/Wrong Type. All containing path and description
 
 ### [JsonEncoder](src/main/scala/io/github/agolovenko/avro/json/JsonEncoder.scala) - encodes avro's `GenericData.Record` into Json object
@@ -41,7 +41,7 @@ and `2.13`
 ### build.sbt:
 
 ```sbt
-libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-json" % "0.3.0"
+libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-json" % "0.4.0"
 ```
 
 ### code:
@@ -77,7 +77,7 @@ val schema = new Schema.Parser().parse(
 import io.github.agolovenko.avro.StringParsers._
 
 val data = Json.parse("""{"field1": [12, 14]}""")
-val parser = new JsonParser(schema, primitiveParsers ++ base64Parsers)
+val parser = new JsonParser(schema, primitiveParsers orElse base64Parsers)
 val record: GenericData.Record = parser(data)
 val bytes: Array[Byte] = toBytes(record)
 
@@ -85,7 +85,7 @@ val bytes: Array[Byte] = toBytes(record)
 
 import io.github.agolovenko.avro.StringEncoders._
 
-val encoder = new JsonEncoder(base64Encoders ++ dateEncoder(DateTimeFormatter.ISO_DATE))
+val encoder = new JsonEncoder(base64Encoders orElse dateEncoder(DateTimeFormatter.ISO_DATE))
 val json: JsObject = encoder(record)
 ```
 

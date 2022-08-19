@@ -17,11 +17,14 @@ class Path {
     it.mkString("/", "/", "")
   }
 
+  def =~=(other: Path): Boolean =
+    pathStack.reverseIterator.filterNot(_.startsWith("[")) sameElements other.pathStack.reverseIterator.filterNot(_.startsWith("["))
+
   override def toString: String = mkString(withArrayIdx = true)
 
   override def hashCode(): Int = pathStack.hashCode()
   override def equals(obj: Any): Boolean = obj match {
-    case other: Path => pathStack == other.pathStack
+    case other: Path => pathStack.reverseIterator sameElements other.pathStack.reverseIterator
     case _           => false
   }
 }
