@@ -1,6 +1,6 @@
-package io.github.agolovenko.avro.json
+package io.github.agolovenko.avro
 
-import io.github.agolovenko.avro.{RandomData, StringEncoders, StringParsers}
+import org.apache.avro.Schema
 import org.apache.avro.Schema.Parser
 import org.apache.avro.generic.GenericData
 import org.scalatest.Inspectors.forAll
@@ -8,14 +8,10 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import scala.util.Random
 
-class RandomDataEncoderDecoderSpec extends AnyWordSpec with Matchers {
+class RandomDataSpec extends AnyWordSpec with Matchers {
   import RandomData._
-  import StringEncoders._
-  import StringParsers._
-
-  import DateTimeFormatter._
 
   private val schema = new Parser().parse("""
       |{
@@ -35,7 +31,14 @@ class RandomDataEncoderDecoderSpec extends AnyWordSpec with Matchers {
       |          {
       |            "name": "nf_int",
       |            "type": "int"
-      |          }
+      |          },
+      |          {
+      |            "name": "f_date_spec",
+      |            "type": {
+      |               "type": "int",
+      |               "logicalType": "date"
+      |             }
+      |           }
       |        ]
       |      }
       |    },
@@ -119,29 +122,26 @@ class RandomDataEncoderDecoderSpec extends AnyWordSpec with Matchers {
       |}""".stripMargin)
 
   "encodes json for RandomData and parses it back to original" in {
-    val encoder = new JsonEncoder(dateEncoder(ISO_DATE) orElse timeEncoders(ISO_LOCAL_TIME) orElse base64Encoders)
-
-    val parser = new JsonParser(
-      schema,
-      dateParser(ISO_DATE) orElse timeParsers(ISO_LOCAL_TIME) orElse base64Parsers
-    )
-
     val fromDate = LocalDate.of(2020, 1, 1)
+
+    val specificPath = Path("f_record", "f_date_spec")
+    val specificDateGenerator: PartialFunction[(Schema, Path, Random), Int] = {
+      case (_, path, random) if path =~= specificPath => randomDay(LocalDate.of(2021, 1, 1), 10)(random)
+    }
+
     val randomData = new RandomData(
       schema,
-      total = 1 << 10,
-      generators = dateGenerator(fromDate, maxDays = 1 << 10) orElse timeGenerators
+      total = 16,
+      generators = specificDateGenerator orElse dateGenerator(fromDate, maxDays = 16) orElse timeGenerators
     )
 
-    val jsons = randomData.map { r =>
-      val record = r.asInstanceOf[GenericData.Record]
-      record -> encoder(record)
-    }.toVector
+    forAll(randomData.toSeq) {
+      case record: GenericData.Record =>
+        GenericData.get().validate(schema, record) shouldBe true
 
-    forAll(jsons) {
-      case (original, json) =>
-        val parsed = parser(json)
-        parsed should ===(original)
+        val epochDay = record.get("f_record").asInstanceOf[GenericData.Record].get("f_date_spec").asInstanceOf[Int]
+
+        LocalDate.ofEpochDay(epochDay.toLong).getYear shouldBe 2021
     }
   }
 }

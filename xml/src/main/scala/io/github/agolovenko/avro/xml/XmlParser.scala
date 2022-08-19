@@ -10,17 +10,25 @@ import scala.util.Try
 import scala.util.control.NonFatal
 import scala.xml._
 
-class XmlParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.empty, fieldRenamings: FieldRenamings = new FieldRenamings()) {
+class XmlParser(
+    schema: Schema,
+    stringParsers: PartialFunction[(String, Schema, Path), Any] = PartialFunction.empty,
+    validations: PartialFunction[(Any, Schema, Path), Unit] = PartialFunction.empty,
+    fieldRenamings: FieldRenamings = FieldRenamings.empty
+) {
+  private val liftedParsers     = stringParsers.lift
+  private val liftedValidations = validations.lift
+
   def apply(data: Elem): GenericData.Record = {
     implicit val path: Path = new Path
     if (schema.getType == RECORD)
-      if (schema.getName == data.label) readRecord(data, schema, defaultValue = None)
+      if (schema.getName == data.label) readAny(data, attributes = None, schema, defaultValue = None).asInstanceOf[GenericData.Record]
       else throw new ParserException(s"Expected '${schema.getName}' root node, got instead: '${data.label}'")
     else throw new ParserException(s"Unsupported root schema of type ${schema.getType}")
   }
 
-  private def readAny(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Any =
-    schema.getType match {
+  private def readAny(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Any = {
+    val result = schema.getType match {
       case RECORD  => readRecord(data, schema, defaultValue)
       case ENUM    => readEnum(data, attributes, schema, defaultValue)
       case MAP     => throw new ParserException("'MAP' type is not supported for XML format")
@@ -37,6 +45,16 @@ class XmlParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.
 
       case NULL => readNull(data, attributes, schema, defaultValue)
     }
+
+    if (result != null)
+      try {
+        liftedValidations((result, schema, path))
+      } catch {
+        case NonFatal(e) => throw new InvalidValueException(result, e.getMessage)
+      }
+
+    result
+  }
 
   private def readRecord(data: NodeSeq, schema: Schema, defaultValue: Option[Any])(implicit path: Path): GenericData.Record =
     data match {
@@ -142,12 +160,10 @@ class XmlParser(schema: Schema, stringParsers: Map[String, String => Any] = Map.
   private def parseString(str: String, schema: Schema, data: NodeSeq)(implicit path: Path): Any =
     if (schema.getType == STRING || schema.getType == ENUM) str
     else
-      stringParsers.get(typeName(schema)).fold(throw new WrongTypeException(schema, data.toString(), Seq("no string parser supplied"))) { parser =>
-        try {
-          parser(str)
-        } catch {
-          case NonFatal(e) => throw new WrongTypeException(schema, data.toString(), Seq(e.getMessage))
-        }
+      try {
+        liftedParsers((str, schema, path)).getOrElse(throw new WrongTypeException(schema, data.toString(), Seq("no string parser supplied")))
+      } catch {
+        case NonFatal(e) => throw new WrongTypeException(schema, data.toString(), Seq(e.getMessage))
       }
 
   private def readNull(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Null =

@@ -73,7 +73,7 @@ class RecordSpec extends AnyWordSpec with Matchers {
     expected.put("rboolean", true)
     expected.put("rdate", LocalDate.of(2021, 11, 23).toEpochDay.toInt)
 
-    val parser = new XmlParser(schema, StringParsers.primitiveParsers ++ StringParsers.dateParser(DateTimeFormatter.ISO_DATE))
+    val parser = new XmlParser(schema, StringParsers.dateParser(DateTimeFormatter.ISO_DATE) orElse StringParsers.primitiveParsers)
 
     parser(xml) shouldBe expected
   }

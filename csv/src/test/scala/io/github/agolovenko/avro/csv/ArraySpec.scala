@@ -60,7 +60,7 @@ class ArraySpec extends AnyWordSpec with Matchers {
       schema,
       arrayDelimiter = Some('|'),
       recordDelimiter = None,
-      StringParsers.primitiveParsers ++ StringParsers.dateParser(DateTimeFormatter.ISO_DATE)
+      StringParsers.dateParser(DateTimeFormatter.ISO_DATE) orElse StringParsers.primitiveParsers
     )
 
     parser(csv) shouldBe expected

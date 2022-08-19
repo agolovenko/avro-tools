@@ -13,9 +13,13 @@ class CsvParser(
     schema: Schema,
     arrayDelimiter: Option[Char],
     recordDelimiter: Option[Char],
-    stringParsers: Map[String, String => Any] = Map.empty,
-    fieldRenamings: FieldRenamings = new FieldRenamings()
+    stringParsers: PartialFunction[(String, Schema, Path), Any] = PartialFunction.empty,
+    validations: PartialFunction[(Any, Schema, Path), Unit] = PartialFunction.empty,
+    fieldRenamings: FieldRenamings = FieldRenamings.empty
 ) {
+  private val liftedParsers = stringParsers.lift
+  private val liftedValidations = validations.lift
+
   def apply(data: CsvRow): GenericData.Record = {
     implicit val path: Path = new Path
     if (schema.getType == RECORD)
@@ -49,8 +53,8 @@ class CsvParser(
     }
   }
 
-  private def readAny(data: Option[String], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Any =
-    schema.getType match {
+  private def readAny(data: Option[String], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Any = {
+    val result = schema.getType match {
       case RECORD  => throw new ParserException("'RECORD' type is not allowed while parsing flat data")
       case ENUM    => readEnum(data, schema, defaultValue)
       case MAP     => throw new ParserException("'MAP' type is not supported for CSV format")
@@ -67,6 +71,16 @@ class CsvParser(
 
       case NULL => readNull(data, schema, defaultValue)
     }
+
+    if (result != null)
+      try {
+        liftedValidations((result, schema, path))
+      } catch {
+        case NonFatal(e) => throw new InvalidValueException(result, e.getMessage)
+      }
+
+    result
+  }
 
   private def readEnum(data: Option[String], schema: Schema, defaultValue: Option[Any])(
       implicit path: Path
@@ -137,12 +151,10 @@ class CsvParser(
   private def parseString(str: String, schema: Schema, data: Option[String])(implicit path: Path): Any =
     if (schema.getType == STRING || schema.getType == ENUM) str
     else
-      stringParsers.get(typeName(schema)).fold(throw new WrongTypeException(schema, data.toString, Seq("no string parser supplied"))) { parser =>
-        try {
-          parser(str)
-        } catch {
-          case NonFatal(e) => throw new WrongTypeException(schema, data.toString, Seq(e.getMessage))
-        }
+      try {
+        liftedParsers((str, schema, path)).getOrElse(throw new WrongTypeException(schema, data.toString, Seq("no string parser supplied")))
+      } catch {
+        case NonFatal(e) => throw new WrongTypeException(schema, data.toString, Seq(e.getMessage))
       }
 
   private def readNull(data: Option[String], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Null =

@@ -10,7 +10,6 @@ import java.lang.{Boolean => JBool, Double => JDouble, Float => JFloat, Integer 
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.util.{Base64, List => JList, Map => JMap}
-import scala.collection.compat._
 import scala.jdk.CollectionConverters._
 
 package object avro {

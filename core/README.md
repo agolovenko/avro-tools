@@ -21,7 +21,7 @@ Base utilities for Avro conversion projects.
 ### build.sbt:
 
 ```sbt
-libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-core" % "0.3.0"
+libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-core" % "0.4.0"
 
 ```
 
@@ -54,9 +54,12 @@ val schema = new Schema.Parser().parse(
 
 import io.github.agolovenko.avro.RandomData._
 
-val namedGenerators: Map[Path, Random => Any] = Map(Path("a", "past") -> (implicit random => randomDay(LocalDate.now().minusDays(30), maxDays = 30)))
+val specificPath = Path("record", "nested_past_date")
+val specificDateGenerator: PartialFunction[(Schema, Path, Random), Int] = {
+  case (_, path, random) if path =~= specificPath => randomDay(LocalDate.of(2021, 1, 1), 10)(random)
+}
 
-val typedGenerators = timeGenerators ++ dateGenerator(fromDate = LocalDate.now(), maxDays = 10)
+val typedGenerators = timeGenerators orElse dateGenerator(fromDate = LocalDate.now(), maxDays = 10)
 
-val records: Iterator[GenericData.Record] = new RandomData(schema, total = 1 << 10, typedGenerators, namedGenerators).map(_.asInstanceOf[GenericData.Record])
+val records: Iterator[GenericData.Record] = new RandomData(schema, total = 1 << 10, specificDateGenerator orElse typedGenerators).map(_.asInstanceOf[GenericData.Record])
 ```
