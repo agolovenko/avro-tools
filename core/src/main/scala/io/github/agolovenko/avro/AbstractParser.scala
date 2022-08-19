@@ -7,6 +7,7 @@ import org.apache.avro.{JsonProperties, Schema}
 import java.lang.{Boolean => JBool, Double => JDouble, Float => JFloat, Integer => JInt, Long => JLong}
 import java.nio.ByteBuffer
 import java.util.{List => JList, Map => JMap}
+import scala.collection.compat._
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
 
