@@ -11,16 +11,16 @@ import java.util.Base64
 
 object StringParsers {
   val primitiveParsers: PartialFunction[(String, Schema, Path), Any] = {
-    case (value, schema, _) if schema.getType == INT     => value.toInt
-    case (value, schema, _) if schema.getType == LONG    => value.toLong
-    case (value, schema, _) if schema.getType == FLOAT   => value.toFloat
-    case (value, schema, _) if schema.getType == DOUBLE  => value.toDouble
-    case (value, schema, _) if schema.getType == BOOLEAN => value.toBoolean
+    case (value, schema, _) if schema.getType == INT && schema.getLogicalType == null     => value.toInt
+    case (value, schema, _) if schema.getType == LONG && schema.getLogicalType == null    => value.toLong
+    case (value, schema, _) if schema.getType == FLOAT && schema.getLogicalType == null   => value.toFloat
+    case (value, schema, _) if schema.getType == DOUBLE && schema.getLogicalType == null  => value.toDouble
+    case (value, schema, _) if schema.getType == BOOLEAN && schema.getLogicalType == null => value.toBoolean
   }
 
   val base64Parsers: PartialFunction[(String, Schema, Path), Any] = {
-    case (value, schema, _) if schema.getType == BYTES => ByteBuffer.wrap(parseBase64(value))
-    case (value, schema, _) if schema.getType == FIXED => parseBase64(value)
+    case (value, schema, _) if schema.getType == BYTES && schema.getLogicalType == null => ByteBuffer.wrap(parseBase64(value))
+    case (value, schema, _) if schema.getType == FIXED && schema.getLogicalType == null => parseBase64(value)
   }
 
   def dateParser(formatter: DateTimeFormatter): PartialFunction[(String, Schema, Path), Int] = {

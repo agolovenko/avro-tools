@@ -8,9 +8,10 @@ class ParserException(message: String)(implicit path: Path) extends RuntimeExcep
 
 class WrongTypeException(schema: Schema, value: String, reasons: Seq[String] = Seq.empty)(implicit path: Path)
     extends ParserException(
-      s"Failed to extract ${typeName(schema)} from '$value'${if (reasons.isEmpty) "" else reasons.mkString("\nCaused by:\n", "\nand\n", "")}"
+      s"Failed to extract ${typeName(schema)} from '$value'${if (reasons.isEmpty) "" else reasons.mkString(". Caused by: ", "and", "")}"
     )
 
 class MissingValueException(schema: Schema)(implicit path: Path) extends ParserException(s"Missing ${typeName(schema)} node")
 
-class InvalidValueException(value: Any, reason: String)(implicit path: Path) extends ParserException(s"Invalid value '$value': $reason")
+class InvalidValueException(value: Any, reason: String)(implicit path: Path)
+    extends ParserException(s"Invalid value '$value'${Option(reason).fold("") { r => s": $r" }}")

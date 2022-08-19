@@ -8,13 +8,13 @@ Base utilities for Avro conversion projects.
 
 * inspired by `org.apache.avro.util.RandomData`
 * allows custom generators by field name or by type
-* predefined generators for some `Logical Types`: 
-  * `uuid`
-  * `date`
-  * `time-millis`
-  * `time-micros`
-  * `timestamp-millis`
-  * `timestamp-micros`
+* predefined generators for some `Logical Types`:
+    * `uuid`
+    * `date`
+    * `time-millis`
+    * `time-micros`
+    * `timestamp-millis`
+    * `timestamp-micros`
 
 ## Usage
 

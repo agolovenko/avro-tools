@@ -7,7 +7,6 @@ import org.apache.avro.generic.GenericData
 
 import scala.jdk.CollectionConverters._
 import scala.util.Try
-import scala.util.control.NonFatal
 import scala.xml._
 
 class XmlParser(
@@ -15,10 +14,7 @@ class XmlParser(
     stringParsers: PartialFunction[(String, Schema, Path), Any] = PartialFunction.empty,
     validations: PartialFunction[(Any, Schema, Path), Unit] = PartialFunction.empty,
     fieldRenamings: FieldRenamings = FieldRenamings.empty
-) {
-  private val liftedParsers     = stringParsers.lift
-  private val liftedValidations = validations.lift
-
+) extends AbstractParser(stringParsers, validations) {
   def apply(data: Elem): GenericData.Record = {
     implicit val path: Path = new Path
     if (schema.getType == RECORD)
@@ -46,12 +42,7 @@ class XmlParser(
       case NULL => readNull(data, attributes, schema, defaultValue)
     }
 
-    if (result != null)
-      try {
-        liftedValidations((result, schema, path))
-      } catch {
-        case NonFatal(e) => throw new InvalidValueException(result, e.getMessage)
-      }
+    validate(result, schema)
 
     result
   }
@@ -147,23 +138,14 @@ class XmlParser(
   private def read(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Any =
     TextNode
       .toText(attributes)
-      .map(parseString(_, schema, data))
+      .map(parseString(_, schema))
       .getOrElse {
         data match {
           case NoNode(_)      => fallbackToDefault(defaultValue, schema)
-          case EmptyNode(_)   => parseString("", schema, data)
-          case TextNode(text) => parseString(text, schema, data)
+          case EmptyNode(_)   => parseString("", schema)
+          case TextNode(text) => parseString(text, schema)
           case _              => throw new WrongTypeException(schema, data.toString())
         }
-      }
-
-  private def parseString(str: String, schema: Schema, data: NodeSeq)(implicit path: Path): Any =
-    if (schema.getType == STRING || schema.getType == ENUM) str
-    else
-      try {
-        liftedParsers((str, schema, path)).getOrElse(throw new WrongTypeException(schema, data.toString(), Seq("no string parser supplied")))
-      } catch {
-        case NonFatal(e) => throw new WrongTypeException(schema, data.toString(), Seq(e.getMessage))
       }
 
   private def readNull(data: NodeSeq, attributes: Option[Seq[Node]], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Null =

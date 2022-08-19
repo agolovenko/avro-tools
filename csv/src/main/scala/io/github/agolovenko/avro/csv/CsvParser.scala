@@ -7,7 +7,6 @@ import org.apache.avro.generic.GenericData
 
 import scala.jdk.CollectionConverters._
 import scala.util.Try
-import scala.util.control.NonFatal
 
 class CsvParser(
     schema: Schema,
@@ -16,10 +15,7 @@ class CsvParser(
     stringParsers: PartialFunction[(String, Schema, Path), Any] = PartialFunction.empty,
     validations: PartialFunction[(Any, Schema, Path), Unit] = PartialFunction.empty,
     fieldRenamings: FieldRenamings = FieldRenamings.empty
-) {
-  private val liftedParsers = stringParsers.lift
-  private val liftedValidations = validations.lift
-
+) extends AbstractParser(stringParsers, validations) {
   def apply(data: CsvRow): GenericData.Record = {
     implicit val path: Path = new Path
     if (schema.getType == RECORD)
@@ -49,6 +45,9 @@ class CsvParser(
           ()
         }
       }
+
+      validate(result, schema)
+
       result
     }
   }
@@ -72,12 +71,7 @@ class CsvParser(
       case NULL => readNull(data, schema, defaultValue)
     }
 
-    if (result != null)
-      try {
-        liftedValidations((result, schema, path))
-      } catch {
-        case NonFatal(e) => throw new InvalidValueException(result, e.getMessage)
-      }
+    validate(result, schema)
 
     result
   }
@@ -145,17 +139,8 @@ class CsvParser(
   private def read(data: Option[String], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Any =
     data match {
       case None | Some(null) => fallbackToDefault(defaultValue, schema)
-      case Some(str)         => parseString(str, schema, data)
+      case Some(str)         => parseString(str, schema)
     }
-
-  private def parseString(str: String, schema: Schema, data: Option[String])(implicit path: Path): Any =
-    if (schema.getType == STRING || schema.getType == ENUM) str
-    else
-      try {
-        liftedParsers((str, schema, path)).getOrElse(throw new WrongTypeException(schema, data.toString, Seq("no string parser supplied")))
-      } catch {
-        case NonFatal(e) => throw new WrongTypeException(schema, data.toString, Seq(e.getMessage))
-      }
 
   private def readNull(data: Option[String], schema: Schema, defaultValue: Option[Any])(implicit path: Path): Null =
     data match {

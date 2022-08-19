@@ -9,17 +9,13 @@ import play.api.libs.json._
 import java.util.{HashMap => JHashMap, Map => JMap}
 import scala.jdk.CollectionConverters._
 import scala.util.Try
-import scala.util.control.NonFatal
 
 class JsonParser(
     schema: Schema,
     stringParsers: PartialFunction[(String, Schema, Path), Any] = PartialFunction.empty,
     validations: PartialFunction[(Any, Schema, Path), Unit] = PartialFunction.empty,
     fieldRenamings: FieldRenamings = FieldRenamings.empty
-) {
-  private val liftedParsers     = stringParsers.lift
-  private val liftedValidations = validations.lift
-
+) extends AbstractParser(stringParsers, validations) {
   def apply(data: JsValue): GenericData.Record = {
     implicit val path: Path = new Path
     if (schema.getType == RECORD)
@@ -48,12 +44,7 @@ class JsonParser(
       case NULL => readNull(data, schema, defaultValue)
     }
 
-    if (result != null)
-      try {
-        liftedValidations((result, schema, path))
-      } catch {
-        case NonFatal(e) => throw new InvalidValueException(result, e.getMessage)
-      }
+    validate(result, schema)
 
     result
   }
@@ -163,15 +154,6 @@ class JsonParser(
         )
     case _ => fallbackToDefault(defaultValue, schema)
   }
-
-  private def parseString(str: String, schema: Schema)(implicit path: Path): Any =
-    if (schema.getType == STRING || schema.getType == ENUM) str
-    else
-      try {
-        liftedParsers((str, schema, path)).getOrElse(throw new WrongTypeException(schema, str, Seq("no string parser supplied")))
-      } catch {
-        case NonFatal(e) => throw new WrongTypeException(schema, str, Seq(e.getMessage))
-      }
 
   private def readNull(data: JsLookupResult, schema: Schema, defaultValue: Option[Any])(implicit path: Path): Null = data match {
     case JsDefined(JsNull)    => null

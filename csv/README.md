@@ -19,12 +19,12 @@ and `2.13`
     * numeric and boolean types
     * `BYTES` and `FIXED` as base64-strings
     * `Logical Types`:
-        * `uuid`
         * `date`
         * `time-millis`
         * `time-micros`
         * `timestamp-millis`
         * `timestamp-micros`
+* Extendable validations
 * Comprehensive Exceptions: General/Missing Value/Wrong Type. All containing path and description
 
 ## Usage
@@ -32,7 +32,7 @@ and `2.13`
 ### build.sbt:
 
 ```sbt
-libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-csv" % "0.3.0"
+libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-csv" % "0.4.0"
 ```
 
 ### code:
