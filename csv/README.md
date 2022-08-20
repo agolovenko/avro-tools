@@ -32,7 +32,7 @@ and `2.13`
 ### build.sbt:
 
 ```sbt
-libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-csv" % "0.4.0"
+libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-csv" % "0.5.0"
 ```
 
 ### code:

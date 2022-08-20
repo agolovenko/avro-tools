@@ -19,6 +19,10 @@ Some notable features:
 
 ## Some sample code to get a taste
 
+```sbt
+libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-json" % "0.5.0"
+```
+
 ```scala
 import io.github.agolovenko.avro._
 import io.github.agolovenko.avro.StringParsers._
