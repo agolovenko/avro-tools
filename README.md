@@ -20,7 +20,7 @@ Some notable features:
 ## Some sample code to get a taste
 
 ```sbt
-libraryDependencies ++= "io.github.agolovenko" %% "avro-tools-json" % "0.5.0"
+libraryDependencies += "io.github.agolovenko" %% "avro-tools-json" % "0.5.0"
 ```
 
 ```scala
