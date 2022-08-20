@@ -1,7 +1,6 @@
 package io.github.agolovenko.avro.json
 
-import io.github.agolovenko.avro.{InvalidValueException, Path, StringParsers}
-import org.apache.avro.Schema.Parser
+import io.github.agolovenko.avro.{InvalidValueException, Path, StringParsers, ValidationContext}
 import org.apache.avro.{LogicalTypes, Schema}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -12,10 +11,9 @@ import java.time.format.DateTimeFormatter
 
 class ValidationsSpec extends AnyWordSpec with Matchers {
   import StringParsers._
-
   import DateTimeFormatter._
 
-  private val schema = new Parser().parse("""
+  private val schema = new Schema.Parser().parse("""
       |{
       |  "type": "record",
       |  "name": "sch_rec",
@@ -55,17 +53,17 @@ class ValidationsSpec extends AnyWordSpec with Matchers {
       |  ]
       |}""".stripMargin)
 
-  private val validations: PartialFunction[(Any, Schema, Path), Unit] = {
+  private val validations: PartialFunction[ValidationContext, Unit] = {
     val nestedStringPath = Path("f_record", "nf_string")
 
     {
-      case (value, _, path) if path =~= nestedStringPath && value.asInstanceOf[String].isEmpty =>
-        throw new IllegalArgumentException("Empty string")
-      case (value, schema, _) if schema.getType == Schema.Type.LONG && value.asInstanceOf[Long] < 0L =>
-        throw new IllegalArgumentException(s"Negative value: $value")
-      case (value, schema, _) if schema.getLogicalType == LogicalTypes.date() =>
-        val year = LocalDate.ofEpochDay(value.asInstanceOf[Int].toLong).getYear
-        if (year != 2022) throw new IllegalArgumentException(s"Invalid year: $year")
+      case ctx if ctx.path =~= nestedStringPath && ctx.value.asInstanceOf[String].isEmpty =>
+        throw new IllegalArgumentException("empty string")
+      case ctx if ctx.schema.getType == Schema.Type.LONG && ctx.value.asInstanceOf[Long] < 0L =>
+        throw new IllegalArgumentException("negative value")
+      case ctx if ctx.schema.getLogicalType == LogicalTypes.date() =>
+        val year = LocalDate.ofEpochDay(ctx.value.asInstanceOf[Int].toLong).getYear
+        if (year != 2022) throw new IllegalArgumentException("invalid year")
     }
   }
 

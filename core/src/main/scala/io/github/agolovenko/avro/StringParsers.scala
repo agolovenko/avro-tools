@@ -9,39 +9,41 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoField
 import java.util.Base64
 
+case class ParserContext(value: String, schema: Schema, path: Path)
+
 object StringParsers {
-  val primitiveParsers: PartialFunction[(String, Schema, Path), Any] = {
-    case (value, schema, _) if schema.getType == INT && schema.getLogicalType == null     => value.toInt
-    case (value, schema, _) if schema.getType == LONG && schema.getLogicalType == null    => value.toLong
-    case (value, schema, _) if schema.getType == FLOAT && schema.getLogicalType == null   => value.toFloat
-    case (value, schema, _) if schema.getType == DOUBLE && schema.getLogicalType == null  => value.toDouble
-    case (value, schema, _) if schema.getType == BOOLEAN && schema.getLogicalType == null => value.toBoolean
+  val primitiveParsers: PartialFunction[ParserContext, Any] = {
+    case ctx if ctx.schema.getType == INT && ctx.schema.getLogicalType == null     => ctx.value.toInt
+    case ctx if ctx.schema.getType == LONG && ctx.schema.getLogicalType == null    => ctx.value.toLong
+    case ctx if ctx.schema.getType == FLOAT && ctx.schema.getLogicalType == null   => ctx.value.toFloat
+    case ctx if ctx.schema.getType == DOUBLE && ctx.schema.getLogicalType == null  => ctx.value.toDouble
+    case ctx if ctx.schema.getType == BOOLEAN && ctx.schema.getLogicalType == null => ctx.value.toBoolean
   }
 
-  val base64Parsers: PartialFunction[(String, Schema, Path), Any] = {
-    case (value, schema, _) if schema.getType == BYTES && schema.getLogicalType == null => ByteBuffer.wrap(parseBase64(value))
-    case (value, schema, _) if schema.getType == FIXED && schema.getLogicalType == null => parseBase64(value)
+  val base64Parsers: PartialFunction[ParserContext, Any] = {
+    case ctx if ctx.schema.getType == BYTES && ctx.schema.getLogicalType == null => ByteBuffer.wrap(parseBase64(ctx.value))
+    case ctx if ctx.schema.getType == FIXED && ctx.schema.getLogicalType == null => parseBase64(ctx.value)
   }
 
-  def dateParser(formatter: DateTimeFormatter): PartialFunction[(String, Schema, Path), Int] = {
-    case (value, schema, _) if schema.getLogicalType == LogicalTypes.date() => LocalDate.parse(value, formatter).toEpochDay.toInt
+  def dateParser(formatter: DateTimeFormatter): PartialFunction[ParserContext, Int] = {
+    case ctx if ctx.schema.getLogicalType == LogicalTypes.date() => LocalDate.parse(ctx.value, formatter).toEpochDay.toInt
   }
 
-  def timeParsers(formatter: DateTimeFormatter): PartialFunction[(String, Schema, Path), Any] = {
-    case (value, schema, _) if schema.getLogicalType == LogicalTypes.timeMillis() => LocalTime.parse(value, formatter).get(ChronoField.MILLI_OF_DAY)
-    case (value, schema, _) if schema.getLogicalType == LogicalTypes.timeMicros() => LocalTime.parse(value, formatter).getLong(ChronoField.MICRO_OF_DAY)
+  def timeParsers(formatter: DateTimeFormatter): PartialFunction[ParserContext, Any] = {
+    case ctx if ctx.schema.getLogicalType == LogicalTypes.timeMillis() => LocalTime.parse(ctx.value, formatter).get(ChronoField.MILLI_OF_DAY)
+    case ctx if ctx.schema.getLogicalType == LogicalTypes.timeMicros() => LocalTime.parse(ctx.value, formatter).getLong(ChronoField.MICRO_OF_DAY)
   }
 
-  def zonedDateTimeParsers(formatter: DateTimeFormatter): PartialFunction[(String, Schema, Path), Long] = {
-    case (value, schema, _) if schema.getLogicalType == LogicalTypes.timestampMillis() => ZonedDateTime.parse(value, formatter).toInstant.toEpochMilli
-    case (value, schema, _) if schema.getLogicalType == LogicalTypes.timestampMicros() => toEpochMicros(ZonedDateTime.parse(value, formatter).toInstant)
+  def zonedDateTimeParsers(formatter: DateTimeFormatter): PartialFunction[ParserContext, Long] = {
+    case ctx if ctx.schema.getLogicalType == LogicalTypes.timestampMillis() => ZonedDateTime.parse(ctx.value, formatter).toInstant.toEpochMilli
+    case ctx if ctx.schema.getLogicalType == LogicalTypes.timestampMicros() => toEpochMicros(ZonedDateTime.parse(ctx.value, formatter).toInstant)
   }
 
-  def localDateTimeParsers(formatter: DateTimeFormatter, zoneId: ZoneId): PartialFunction[(String, Schema, Path), Long] = {
-    case (value, schema, _) if schema.getLogicalType == LogicalTypes.timestampMillis() =>
-      LocalDateTime.parse(value, formatter).atZone(zoneId).toInstant.toEpochMilli
-    case (value, schema, _) if schema.getLogicalType == LogicalTypes.timestampMicros() =>
-      toEpochMicros(LocalDateTime.parse(value, formatter).atZone(zoneId).toInstant)
+  def localDateTimeParsers(formatter: DateTimeFormatter, zoneId: ZoneId): PartialFunction[ParserContext, Long] = {
+    case ctx if ctx.schema.getLogicalType == LogicalTypes.timestampMillis() =>
+      LocalDateTime.parse(ctx.value, formatter).atZone(zoneId).toInstant.toEpochMilli
+    case ctx if ctx.schema.getLogicalType == LogicalTypes.timestampMicros() =>
+      toEpochMicros(LocalDateTime.parse(ctx.value, formatter).atZone(zoneId).toInstant)
   }
 
   private def parseBase64(str: String): Array[Byte] = Base64.getDecoder.decode(str)

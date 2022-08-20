@@ -1,6 +1,6 @@
 package io.github.agolovenko.avro.json
 
-import io.github.agolovenko.avro.{ParserException, Path, typeName}
+import io.github.agolovenko.avro.{EncoderContext, ParserException, Path, typeName}
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData
 import play.api.libs.json._
@@ -12,7 +12,7 @@ import scala.jdk.CollectionConverters._
 import scala.util.Try
 import scala.util.control.NonFatal
 
-class JsonEncoder(stringEncoders: PartialFunction[(Any, Schema, Path), String] = PartialFunction.empty) {
+class JsonEncoder(stringEncoders: PartialFunction[EncoderContext, String] = PartialFunction.empty) {
   import Schema.Type._
 
   private val liftedEncoders = stringEncoders.lift
@@ -40,7 +40,7 @@ class JsonEncoder(stringEncoders: PartialFunction[(Any, Schema, Path), String] =
   private def jsVal(data: Any, schema: Schema)(implicit path: Path): JsValue = {
     val encoded =
       try {
-        liftedEncoders((data, schema, path))
+        liftedEncoders(EncoderContext(data, schema, path))
       } catch {
         case NonFatal(e) => throw new ParserException(s"Failed to encode value '$data' of type ${typeName(schema)}: ${e.getMessage}")
       }

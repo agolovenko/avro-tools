@@ -12,8 +12,8 @@ class CsvParser(
     schema: Schema,
     arrayDelimiter: Option[Char],
     recordDelimiter: Option[Char],
-    stringParsers: PartialFunction[(String, Schema, Path), Any] = PartialFunction.empty,
-    validations: PartialFunction[(Any, Schema, Path), Unit] = PartialFunction.empty,
+    stringParsers: PartialFunction[ParserContext, Any] = PartialFunction.empty,
+    validations: PartialFunction[ValidationContext, Unit] = PartialFunction.empty,
     fieldRenamings: FieldRenamings = FieldRenamings.empty
 ) extends AbstractParser(stringParsers, validations) {
   def apply(data: CsvRow): GenericData.Record = {

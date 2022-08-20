@@ -1,6 +1,5 @@
 package io.github.agolovenko.avro
 
-import org.apache.avro.Schema
 import org.apache.avro.Schema.Parser
 import org.apache.avro.generic.GenericData
 import org.scalatest.Inspectors.forAll
@@ -8,7 +7,6 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 import java.time.LocalDate
-import scala.util.Random
 
 class RandomDataSpec extends AnyWordSpec with Matchers {
   import RandomData._
@@ -125,8 +123,8 @@ class RandomDataSpec extends AnyWordSpec with Matchers {
     val fromDate = LocalDate.of(2020, 1, 1)
 
     val specificPath = Path("f_record", "f_date_spec")
-    val specificDateGenerator: PartialFunction[(Schema, Path, Random), Int] = {
-      case (_, path, random) if path =~= specificPath => randomDay(LocalDate.of(2021, 1, 1), 10)(random)
+    val specificDateGenerator: PartialFunction[GeneratorContext, Int] = {
+      case ctx if ctx.path =~= specificPath => randomDay(LocalDate.of(2021, 1, 1), 10)(ctx.random)
     }
 
     val randomData = new RandomData(

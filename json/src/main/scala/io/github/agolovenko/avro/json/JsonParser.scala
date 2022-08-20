@@ -12,8 +12,8 @@ import scala.util.Try
 
 class JsonParser(
     schema: Schema,
-    stringParsers: PartialFunction[(String, Schema, Path), Any] = PartialFunction.empty,
-    validations: PartialFunction[(Any, Schema, Path), Unit] = PartialFunction.empty,
+    stringParsers: PartialFunction[ParserContext, Any] = PartialFunction.empty,
+    validations: PartialFunction[ValidationContext, Unit] = PartialFunction.empty,
     fieldRenamings: FieldRenamings = FieldRenamings.empty
 ) extends AbstractParser(stringParsers, validations) {
   def apply(data: JsValue): GenericData.Record = {

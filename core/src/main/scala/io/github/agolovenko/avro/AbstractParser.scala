@@ -11,7 +11,7 @@ import scala.collection.compat._
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
 
-class AbstractParser(stringParsers: PartialFunction[(String, Schema, Path), Any], validations: PartialFunction[(Any, Schema, Path), Unit]) {
+class AbstractParser(stringParsers: PartialFunction[ParserContext, Any], validations: PartialFunction[ValidationContext, Unit]) {
   private val liftedParsers     = stringParsers.lift
   private val liftedValidations = validations.lift
 
@@ -20,7 +20,7 @@ class AbstractParser(stringParsers: PartialFunction[(String, Schema, Path), Any]
     else {
       val parsed =
         try {
-          liftedParsers((str, schema, path))
+          liftedParsers(ParserContext(str, schema, path))
         } catch {
           case NonFatal(e) => throw new WrongTypeException(schema, str, Seq(e.getMessage))
         }
@@ -31,7 +31,7 @@ class AbstractParser(stringParsers: PartialFunction[(String, Schema, Path), Any]
   protected def validate(value: Any, schema: Schema)(implicit path: Path): Unit = {
     if (value != null)
       try {
-        liftedValidations((value, schema, path))
+        liftedValidations(ValidationContext(value, schema, path))
       } catch {
         case NonFatal(e) => throw new InvalidValueException(value, e.getMessage)
       }
