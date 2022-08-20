@@ -1,13 +1,13 @@
 # avro-tools-json
 
-Base utilities for Avro conversion projects.
+Base classes and utilities for Avro conversion projects.
 
 ## Features
 
 ### [RandomData](src/main/scala/io/github/agolovenko/avro/RandomData.scala) - given the schema generates a random avro record
 
 * inspired by `org.apache.avro.util.RandomData`
-* allows custom generators by field name or by type
+* allows custom generators by field path or by type
 * predefined generators for some `Logical Types`:
     * `uuid`
     * `date`
@@ -55,8 +55,8 @@ val schema = new Schema.Parser().parse(
 import io.github.agolovenko.avro.RandomData._
 
 val specificPath = Path("record", "nested_past_date")
-val specificDateGenerator: PartialFunction[(Schema, Path, Random), Int] = {
-  case (_, path, random) if path =~= specificPath => randomDay(LocalDate.of(2021, 1, 1), 10)(random)
+val specificDateGenerator: PartialFunction[GeneratorContext, Int] = {
+  case ctx if ctx.path =~= specificPath => randomDay(LocalDate.of(2021, 1, 1), 10)(ctx.random)
 }
 
 val typedGenerators = timeGenerators orElse dateGenerator(fromDate = LocalDate.now(), maxDays = 10)

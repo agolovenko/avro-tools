@@ -1,6 +1,6 @@
 # avro-tools
 
-Set of tools for conversions between various text formats and Avro written in Scala. Available for scala `2.11`, `2.12`
+Set of tools for conversions between various text formats and `avro`. Available for scala `2.11`, `2.12`
 and `2.13`
 
 Some notable features:
@@ -17,7 +17,7 @@ Some notable features:
 * [XML](xml/README.md)   - Set of tools for XML to Avro conversions
 * [CSV](csv/README.md)   - Set of tools for CSV to Avro conversions
 
-## Some sample code
+## Some sample code to get a taste
 
 ```scala
 import io.github.agolovenko.avro._
