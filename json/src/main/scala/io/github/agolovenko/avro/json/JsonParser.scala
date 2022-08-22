@@ -17,7 +17,7 @@ class JsonParser(
     fieldRenamings: FieldRenamings = FieldRenamings.empty
 ) extends AbstractParser(stringParsers, validations) {
   def apply(data: JsValue): GenericData.Record = {
-    implicit val path: Path = new Path
+    implicit val path: Path = Path.empty
     if (schema.getType == RECORD)
       readAny(JsDefined(data), schema, defaultValue = None).asInstanceOf[GenericData.Record]
     else

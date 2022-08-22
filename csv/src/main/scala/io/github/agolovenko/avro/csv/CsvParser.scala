@@ -17,7 +17,7 @@ class CsvParser(
     fieldRenamings: FieldRenamings = FieldRenamings.empty
 ) extends AbstractParser(stringParsers, validations) {
   def apply(data: CsvRow): GenericData.Record = {
-    implicit val path: Path = new Path
+    implicit val path: Path = Path.empty
     if (schema.getType == RECORD)
       readRecord(data, schema, defaultValue = None)
     else throw new ParserException(s"Unsupported root schema of type ${schema.getType}")

@@ -2,9 +2,7 @@ package io.github.agolovenko.avro
 
 import io.github.agolovenko.avro.StackType.Stack
 
-class Path {
-  private val pathStack = new Stack[String]()
-
+class Path private (private val pathStack: Stack[String]) {
   def push(fieldName: String): Unit = pathStack.push(fieldName)
   def push(arrayIdx: Int): Unit     = pathStack.push(s"[$arrayIdx]")
   def pop(): String                 = pathStack.pop()
@@ -27,11 +25,15 @@ class Path {
     case other: Path => pathStack.reverseIterator sameElements other.pathStack.reverseIterator
     case _           => false
   }
+
+  override def clone(): Path = new Path(pathStack.clone())
 }
 
 object Path {
+  def empty: Path = new Path(new Stack[String]())
+
   def apply(elements: String*): Path = {
-    val path = new Path
+    val path = Path.empty
     elements.foreach(path.push)
     path
   }

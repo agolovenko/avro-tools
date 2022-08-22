@@ -26,7 +26,7 @@ Set of tools for XML to Avro conversions written in Scala using scala-xml. Avail
 ### build.sbt:
 
 ```sbt
-libraryDependencies += "io.github.agolovenko" %% "avro-tools-xml" % "0.5.0"
+libraryDependencies += "io.github.agolovenko" %% "avro-tools-xml" % "0.5.1"
 ```
 
 ### code:

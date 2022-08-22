@@ -16,7 +16,7 @@ class XmlParser(
     fieldRenamings: FieldRenamings = FieldRenamings.empty
 ) extends AbstractParser(stringParsers, validations) {
   def apply(data: Elem): GenericData.Record = {
-    implicit val path: Path = new Path
+    implicit val path: Path = Path.empty
     if (schema.getType == RECORD)
       if (schema.getName == data.label) readAny(data, attributes = None, schema, defaultValue = None).asInstanceOf[GenericData.Record]
       else throw new ParserException(s"Expected '${schema.getName}' root node, got instead: '${data.label}'")

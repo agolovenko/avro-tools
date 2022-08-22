@@ -18,7 +18,7 @@ class JsonEncoder(stringEncoders: PartialFunction[EncoderContext, String] = Part
   private val liftedEncoders = stringEncoders.lift
 
   def apply(data: GenericData.Record): JsObject = {
-    implicit val path: Path = new Path
+    implicit val path: Path = Path.empty
     if (GenericData.get().validate(data.getSchema, data)) jsObj(data, data.getSchema)
     else throw new ParserException("Invalid record")
   }

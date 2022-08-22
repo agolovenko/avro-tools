@@ -22,7 +22,7 @@ class RandomData(
 
   private var count            = 0
   private val random           = new Random(seed)
-  private val path             = new Path
+  private val path             = Path.empty
   private val liftedGenerators = generators.lift
 
   override def hasNext: Boolean = count < total
