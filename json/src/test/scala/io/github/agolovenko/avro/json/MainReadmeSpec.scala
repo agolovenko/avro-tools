@@ -7,9 +7,7 @@ class MainReadmeSpec extends AnyWordSpec with Matchers {
   "main readme sample" in {
     import io.github.agolovenko.avro.StringParsers._
     import io.github.agolovenko.avro._
-    import io.github.agolovenko.avro.json.JsonParser
     import org.apache.avro.{LogicalTypes, Schema}
-    import org.apache.avro.generic.GenericData
     import play.api.libs.json.Json
 
     import java.time.LocalDate
@@ -105,7 +103,7 @@ class MainReadmeSpec extends AnyWordSpec with Matchers {
         |}
         |""".stripMargin)
 
-    an[IllegalArgumentException] should be thrownBy parser(input2)
+    an[InvalidValueException] should be thrownBy parser(input2)
 
 //    parser(input2) //io.github.agolovenko.avro.InvalidValueException: Invalid value '': empty string @ /f-record/nf-string
   }
