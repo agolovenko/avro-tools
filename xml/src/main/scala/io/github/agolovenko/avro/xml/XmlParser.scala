@@ -1,5 +1,6 @@
 package io.github.agolovenko.avro.xml
 
+import io.github.agolovenko.avro.PathEntry.{ArrayEntry, FieldEntry}
 import io.github.agolovenko.avro._
 import org.apache.avro.Schema
 import org.apache.avro.Schema.Type._
@@ -13,7 +14,7 @@ class XmlParser(
     schema: Schema,
     stringParsers: PartialFunction[ParserContext, Any] = PartialFunction.empty,
     validations: PartialFunction[ValidationContext, Unit] = PartialFunction.empty,
-    fieldRenamings: FieldRenamings = FieldRenamings.empty
+    renameRules: RenameRules = RenameRules.empty
 ) extends AbstractParser(stringParsers, validations) {
   def apply(data: Elem): GenericData.Record = {
     implicit val path: Path = Path.empty
@@ -52,8 +53,8 @@ class XmlParser(
       case SingleNode(elem: Elem) =>
         val result = new GenericData.Record(schema)
         schema.getFields.asScala.foreach { field =>
-          val fieldName = fieldRenamings(field.name())
-          path.push(fieldName)
+          val fieldName = renameRules(field.name())
+          path.push(FieldEntry(fieldName))
           try {
             val value = readAny(elem \ fieldName, elem.attributes.get(field.name()).map(_.toSeq), field.schema(), Option(field.defaultVal()))
             result.put(field.name(), value)
@@ -80,7 +81,7 @@ class XmlParser(
     val elemLabel =
       if (schema.getElementType.getType == RECORD)
         schema.getElementType.getName
-      else path.peek
+      else path.peek.field
 
     data match {
       case SingleNode(elem: Elem) if elem.label != elemLabel => parseArray(elem.child, schema)
@@ -96,7 +97,7 @@ class XmlParser(
     val result = new GenericData.Array[Any](elems.size, schema)
     elems.zipWithIndex.foreach {
       case (child, idx) =>
-        path.push(s"[$idx]")
+        path.push(ArrayEntry(idx))
         try {
           val value = readAny(child, attributes = None, schema.getElementType, None)
           result.add(idx, value)

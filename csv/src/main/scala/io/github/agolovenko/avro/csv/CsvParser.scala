@@ -1,5 +1,6 @@
 package io.github.agolovenko.avro.csv
 
+import io.github.agolovenko.avro.PathEntry.{ArrayEntry, FieldEntry}
 import io.github.agolovenko.avro._
 import org.apache.avro.Schema
 import org.apache.avro.Schema.Type._
@@ -14,7 +15,7 @@ class CsvParser(
     recordDelimiter: Option[Char],
     stringParsers: PartialFunction[ParserContext, Any] = PartialFunction.empty,
     validations: PartialFunction[ValidationContext, Unit] = PartialFunction.empty,
-    fieldRenamings: FieldRenamings = FieldRenamings.empty
+    renameRules: RenameRules = RenameRules.empty
 ) extends AbstractParser(stringParsers, validations) {
   def apply(data: CsvRow): GenericData.Record = {
     implicit val path: Path = Path.empty
@@ -28,8 +29,8 @@ class CsvParser(
     else {
       val result = new GenericData.Record(schema)
       schema.getFields.asScala.foreach { field =>
-        val fieldName = fieldRenamings(field.name())
-        path.push(fieldName)
+        val fieldName = renameRules(field.name())
+        path.push(FieldEntry(fieldName))
 
         try {
           val value = if (field.schema().getType == RECORD) {
@@ -97,7 +98,7 @@ class CsvParser(
     val result = new GenericData.Array[Any](elems.length, schema)
     elems.zipWithIndex.foreach {
       case (elem, idx) =>
-        path.push(s"[$idx]")
+        path.push(ArrayEntry(idx))
         try {
           val value = readAny(Some(elem), schema.getElementType, None)
           result.add(idx, value)

@@ -1,6 +1,6 @@
 package io.github.agolovenko.avro.json
 
-import io.github.agolovenko.avro.{FieldRenamings, Path, RenameRule}
+import io.github.agolovenko.avro.{Path, RenameRule, RenameRules}
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData
 import org.scalatest.matchers.should.Matchers
@@ -9,7 +9,7 @@ import play.api.libs.json.Json
 
 import scala.jdk.CollectionConverters._
 
-class FeildRenamingsSpec extends AnyWordSpec with Matchers {
+class RenameRulesSpec extends AnyWordSpec with Matchers {
   import Schema._
 
   private val schema = new Parser().parse("""
@@ -42,9 +42,9 @@ class FeildRenamingsSpec extends AnyWordSpec with Matchers {
       |}""".stripMargin)
 
   "renames fields correctly" in {
-    val data      = Json.parse("""{"field-1": [{"n-field1": "aaa", "n_field2": 23}]}""")
-    val renamings = new FieldRenamings(RenameRule(Path("field-1"), "field1"), RenameRule(Path("field-1", "n-field1"), "n_field1"))
-    val record    = new JsonParser(schema, fieldRenamings = renamings)(data)
+    val data        = Json.parse("""{"field-1": [{"n-field1": "aaa", "n_field2": 23}]}""")
+    val renameRules = new RenameRules(RenameRule(Path("field-1"), "field1"), RenameRule(Path("field-1", "n-field1"), "n_field1"))
+    val record      = new JsonParser(schema, renameRules = renameRules)(data)
 
     GenericData.get().validate(schema, record) shouldBe true
 

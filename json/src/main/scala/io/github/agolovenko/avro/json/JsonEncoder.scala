@@ -1,5 +1,6 @@
 package io.github.agolovenko.avro.json
 
+import io.github.agolovenko.avro.PathEntry.{ArrayEntry, FieldEntry, MapEntry}
 import io.github.agolovenko.avro.{EncoderContext, ParserException, Path, typeName}
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData
@@ -25,7 +26,7 @@ class JsonEncoder(stringEncoders: PartialFunction[EncoderContext, String] = Part
 
   private def jsObj(data: GenericData.Record, schema: Schema)(implicit path: Path): JsObject = {
     val fields = schema.getFields.asScala.map { field =>
-      path.push(field.name())
+      path.push(FieldEntry(field.name()))
       try {
         field.name() -> jsVal(data.get(field.pos()), field.schema())
       } finally {
@@ -72,7 +73,7 @@ class JsonEncoder(stringEncoders: PartialFunction[EncoderContext, String] = Part
   private def jsArray(data: GenericData.Array[_], schema: Schema)(implicit path: Path): JsArray = {
     val elements = data.asScala.zipWithIndex.map {
       case (element, idx) =>
-        path.push(s"[$idx]")
+        path.push(ArrayEntry(idx))
         try {
           jsVal(element, schema.getElementType)
         } finally {
@@ -87,7 +88,7 @@ class JsonEncoder(stringEncoders: PartialFunction[EncoderContext, String] = Part
   private def jsMap(map: JMap[String, _], schema: Schema)(implicit path: Path): JsObject = {
     val fields = map.asScala.map {
       case (key, value) =>
-        path.push(key)
+        path.push(MapEntry(key))
         try {
           key -> jsVal(value, schema.getValueType)
         } finally {

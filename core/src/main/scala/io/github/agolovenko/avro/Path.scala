@@ -1,24 +1,24 @@
 package io.github.agolovenko.avro
 
+import io.github.agolovenko.avro.PathEntry.FieldEntry
 import io.github.agolovenko.avro.StackType.Stack
 
-class Path private (private val pathStack: Stack[String]) {
-  def push(fieldName: String): Unit = pathStack.push(fieldName)
-  def push(arrayIdx: Int): Unit     = pathStack.push(s"[$arrayIdx]")
-  def pop(): String                 = pathStack.pop()
-  def clear(): Unit                 = pathStack.clear()
-  def peek: String                  = pathStack.top
+class Path private (private val pathStack: Stack[PathEntry]) {
+  def push(entry: PathEntry): Unit = pathStack.push(entry)
+  def pop(): PathEntry             = pathStack.pop()
+  def clear(): Unit                = pathStack.clear()
+  def peek: PathEntry              = pathStack.top
 
-  def mkString(withArrayIdx: Boolean): String = {
-    val it = if (withArrayIdx) pathStack.reverseIterator else pathStack.reverseIterator.filterNot(_.startsWith("["))
+  def mkString(fieldsOnly: Boolean): String = {
+    val it = if (fieldsOnly) pathStack.reverseIterator.filter(_.isField) else pathStack.reverseIterator
 
-    it.mkString("/", "/", "")
+    it.map(_.toString).mkString("/", "/", "")
   }
 
   def =~=(other: Path): Boolean =
-    pathStack.reverseIterator.filterNot(_.startsWith("[")) sameElements other.pathStack.reverseIterator.filterNot(_.startsWith("["))
+    pathStack.reverseIterator.filter(_.isField) sameElements other.pathStack.reverseIterator.filter(_.isField)
 
-  override def toString: String = mkString(withArrayIdx = true)
+  override def toString: String = mkString(fieldsOnly = false)
 
   override def hashCode(): Int = pathStack.hashCode()
   override def equals(obj: Any): Boolean = obj match {
@@ -30,11 +30,11 @@ class Path private (private val pathStack: Stack[String]) {
 }
 
 object Path {
-  def empty: Path = new Path(new Stack[String]())
+  def empty: Path = new Path(new Stack[PathEntry]())
 
-  def apply(elements: String*): Path = {
+  def apply(entries: String*): Path = {
     val path = Path.empty
-    elements.foreach(path.push)
+    entries.foreach { field => path.push(FieldEntry(field)) }
     path
   }
 }

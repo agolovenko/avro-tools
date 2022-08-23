@@ -1,5 +1,6 @@
 package io.github.agolovenko.avro.json
 
+import io.github.agolovenko.avro.PathEntry.{ArrayEntry, FieldEntry, MapEntry}
 import io.github.agolovenko.avro._
 import org.apache.avro.Schema
 import org.apache.avro.Schema.Type._
@@ -14,7 +15,7 @@ class JsonParser(
     schema: Schema,
     stringParsers: PartialFunction[ParserContext, Any] = PartialFunction.empty,
     validations: PartialFunction[ValidationContext, Unit] = PartialFunction.empty,
-    fieldRenamings: FieldRenamings = FieldRenamings.empty
+    renameRules: RenameRules = RenameRules.empty
 ) extends AbstractParser(stringParsers, validations) {
   def apply(data: JsValue): GenericData.Record = {
     implicit val path: Path = Path.empty
@@ -54,8 +55,8 @@ class JsonParser(
       case JsDefined(obj: JsObject) =>
         val result = new GenericData.Record(schema)
         schema.getFields.asScala.foreach { field =>
-          val fieldName = fieldRenamings(field.name())
-          path.push(fieldName)
+          val fieldName = renameRules(field.name())
+          path.push(FieldEntry(fieldName))
           try {
             val value = readAny(obj \ fieldName, field.schema(), Option(field.defaultVal()))
             result.put(field.name(), value)
@@ -82,7 +83,7 @@ class JsonParser(
         val result = new GenericData.Array[Any](arr.value.size, schema)
         arr.value.zipWithIndex.foreach {
           case (jsValue, idx) =>
-            path.push(s"[$idx]")
+            path.push(ArrayEntry(idx))
             try {
               val value = readAny(JsDefined(jsValue), schema.getElementType, None)
               result.add(idx, value)
@@ -102,7 +103,7 @@ class JsonParser(
         val result = new JHashMap[String, Any]()
         obj.value.foreach {
           case (key, jsValue) =>
-            path.push(key)
+            path.push(MapEntry(key))
             try {
               val value = readAny(JsDefined(jsValue), schema.getValueType, None)
               result.put(key, value)

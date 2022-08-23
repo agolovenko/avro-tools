@@ -1,5 +1,6 @@
 package io.github.agolovenko.avro
 
+import io.github.agolovenko.avro.PathEntry.FieldEntry
 import org.apache.avro.generic.GenericData
 import org.apache.avro.{LogicalTypes, Schema}
 
@@ -41,7 +42,7 @@ class RandomData(
             val record = new GenericData.Record(schema)
 
             schema.getFields.asScala.foreach { field =>
-              path.push(field.name)
+              path.push(FieldEntry(field.name))
               record.put(field.name, generate(field.schema))
               path.pop()
             }
