@@ -16,8 +16,8 @@ class JsonParser(
     stringParsers: PartialFunction[ParserContext, Any] = PartialFunction.empty,
     validations: PartialFunction[ValidationContext, Unit] = PartialFunction.empty,
     renameRules: RenameRules = RenameRules.empty
-) extends AbstractParser(stringParsers, validations) {
-  def apply(data: JsValue): GenericData.Record = {
+) extends AbstractParser[JsValue](stringParsers, validations) {
+  override def apply(data: JsValue): GenericData.Record = {
     implicit val path: Path = Path.empty
     if (schema.getType == RECORD)
       readAny(JsDefined(data), schema, defaultValue = None).asInstanceOf[GenericData.Record]

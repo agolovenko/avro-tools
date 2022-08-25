@@ -11,9 +11,11 @@ import scala.collection.compat._
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
 
-class AbstractParser(stringParsers: PartialFunction[ParserContext, Any], validations: PartialFunction[ValidationContext, Unit]) {
+abstract class AbstractParser[Input](stringParsers: PartialFunction[ParserContext, Any], validations: PartialFunction[ValidationContext, Unit]) {
   private val liftedParsers     = stringParsers.lift
   private val liftedValidations = validations.lift
+
+  def apply(data: Input): GenericData.Record
 
   protected def parseString(str: String, schema: Schema)(implicit path: Path): Any =
     if (schema.getType == STRING || schema.getType == ENUM) str

@@ -15,8 +15,8 @@ class XmlParser(
     stringParsers: PartialFunction[ParserContext, Any] = PartialFunction.empty,
     validations: PartialFunction[ValidationContext, Unit] = PartialFunction.empty,
     renameRules: RenameRules = RenameRules.empty
-) extends AbstractParser(stringParsers, validations) {
-  def apply(data: Elem): GenericData.Record = {
+) extends AbstractParser[Elem](stringParsers, validations) {
+  override def apply(data: Elem): GenericData.Record = {
     implicit val path: Path = Path.empty
     if (schema.getType == RECORD)
       if (schema.getName == data.label) readAny(data, attributes = None, schema, defaultValue = None).asInstanceOf[GenericData.Record]

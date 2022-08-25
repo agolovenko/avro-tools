@@ -16,8 +16,8 @@ class CsvParser(
     stringParsers: PartialFunction[ParserContext, Any] = PartialFunction.empty,
     validations: PartialFunction[ValidationContext, Unit] = PartialFunction.empty,
     renameRules: RenameRules = RenameRules.empty
-) extends AbstractParser(stringParsers, validations) {
-  def apply(data: CsvRow): GenericData.Record = {
+) extends AbstractParser[CsvRow](stringParsers, validations) {
+  override def apply(data: CsvRow): GenericData.Record = {
     implicit val path: Path = Path.empty
     if (schema.getType == RECORD)
       readRecord(data, schema, defaultValue = None)
