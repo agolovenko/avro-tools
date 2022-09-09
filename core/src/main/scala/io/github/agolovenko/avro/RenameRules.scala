@@ -31,5 +31,5 @@ class RenameRules(rules: RenameRule*) {
 }
 
 object RenameRules {
-  def empty: RenameRules = new RenameRules()
+  val empty: RenameRules = new RenameRules()
 }

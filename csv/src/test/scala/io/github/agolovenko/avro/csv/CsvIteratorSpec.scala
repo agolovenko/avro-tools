@@ -4,15 +4,12 @@ import com.univocity.parsers.csv.CsvParserSettings
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
-import java.io.ByteArrayInputStream
-import java.nio.charset.StandardCharsets.UTF_8
-
 class CsvIteratorSpec extends AnyWordSpec with Matchers {
   "handles empty input" in {
     val settings = new CsvParserSettings()
     settings.setReadInputOnSeparateThread(false)
 
-    CsvIterator(settings, UTF_8)(new ByteArrayInputStream(Array.empty[Byte])) shouldBe empty
+    CsvIterator(settings, customHeaders = None)("") shouldBe empty
   }
 
   "parses all the rows" in {
@@ -27,9 +24,9 @@ class CsvIteratorSpec extends AnyWordSpec with Matchers {
 
     val expected = Seq(
       CsvRow("rstring" -> "qwerty", "rint" -> "123", "rlong" -> "123456789012345667", "rfloat" -> "123.45", "rdouble" -> "12345.12345"),
-      CsvRow("rstring" -> "ytrewq", "rint" -> "321", "rlong" -> "333", "rfloat" -> null, "rdouble" -> "92345.1")
+      CsvRow("rstring" -> "ytrewq", "rint" -> "321", "rlong" -> "333", "rfloat"                -> null, "rdouble"     -> "92345.1")
     )
 
-    CsvIterator(settings, UTF_8)(new ByteArrayInputStream(input.getBytes(UTF_8))).toSeq should contain theSameElementsAs expected
+    CsvIterator(settings, customHeaders = None)(input).toSeq should contain theSameElementsAs expected
   }
 }

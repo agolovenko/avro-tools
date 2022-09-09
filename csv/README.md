@@ -32,7 +32,7 @@ and `2.13`
 ### build.sbt:
 
 ```sbt
-libraryDependencies += "io.github.agolovenko" %% "avro-tools-csv" % "0.6.1"
+libraryDependencies += "io.github.agolovenko" %% "avro-tools-csv" % "0.6.2"
 ```
 
 ### code:
@@ -97,7 +97,7 @@ val schema = new Schema.Parser().parse(
 val settings = new CsvParserSettings()
 settings.setReadInputOnSeparateThread(false)
 
-val csvRows: Iterator[CsvRow] = CsvIterator(settings, UTF_8)(new ByteArrayInputStream(csv.getBytes(UTF_8)))
+val csvRows: Iterator[CsvRow] = CsvIterator(settings, customHeaders = None)(csv)
 
 val parser = new CsvParser(schema, arrayDelimiter = None, recordDelimiter = None, StringParsers.primitiveParsers)
 

@@ -4,7 +4,7 @@ import com.univocity.parsers.common.{AbstractParser, CommonParserSettings}
 import com.univocity.parsers.csv.{CsvParserSettings, CsvParser => UnivocityCsvParser}
 import com.univocity.parsers.tsv.{TsvParserSettings, TsvParser => UnivocityTsvParser}
 
-import java.io.InputStream
+import java.io.{InputStream, StringReader}
 import java.nio.charset.Charset
 
 class CsvIterator private (parser: AbstractParser[_], customHeaders: Option[Array[String]]) extends Iterator[CsvRow] {
@@ -32,17 +32,27 @@ class CsvIterator private (parser: AbstractParser[_], customHeaders: Option[Arra
 }
 
 object CsvIterator {
-  def apply[S <: CommonParserSettings[_]](settings: S, encoding: Charset, customHeaders: Option[Array[String]] = None)(
+  def apply[S <: CommonParserSettings[_]](settings: S, encoding: Charset, customHeaders: Option[Array[String]])(
       is: => InputStream
   ): CsvIterator = {
-    val parser = settings match {
-      case csvSettings: CsvParserSettings => new UnivocityCsvParser(csvSettings)
-      case tsvSettings: TsvParserSettings => new UnivocityTsvParser(tsvSettings)
-      case unsupported                    => throw new CsvException(s"Unsupported settings type: ${unsupported.getClass.getName}")
-    }
+    val parser = newParser(settings)
 
     parser.beginParsing(is, encoding)
 
     new CsvIterator(parser, customHeaders)
+  }
+
+  def apply[S <: CommonParserSettings[_]](settings: S, customHeaders: Option[Array[String]])(content: String): CsvIterator = {
+    val parser = newParser(settings)
+
+    parser.beginParsing(new StringReader(content))
+
+    new CsvIterator(parser, customHeaders)
+  }
+
+  private def newParser[S <: CommonParserSettings[_]](settings: S) = settings match {
+    case csvSettings: CsvParserSettings => new UnivocityCsvParser(csvSettings)
+    case tsvSettings: TsvParserSettings => new UnivocityTsvParser(tsvSettings)
+    case unsupported                    => throw new CsvException(s"Unsupported settings type: ${unsupported.getClass.getName}")
   }
 }

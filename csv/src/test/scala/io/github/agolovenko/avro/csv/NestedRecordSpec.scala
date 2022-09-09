@@ -16,42 +16,42 @@ class NestedRecordSpec extends AnyWordSpec with Matchers {
                        |""".stripMargin)
 
     val schema = new Parser().parse("""
-                                      |{
-                                      |  "type": "record",
-                                      |  "name": "sch_rec1",
-                                      |  "fields": [
-                                      |    {
-                                      |      "name": "r1",
-                                      |      "type": {
-                                      |        "name": "sch_r1",
-                                      |        "type": "record",
-                                      |        "fields": [
-                                      |          {
-                                      |            "name": "r1_s",
-                                      |            "type": "string"
-                                      |          },
-                                      |          {
-                                      |            "name": "r1_r2",
-                                      |            "type": {
-                                      |              "name": "sch_r1_r2",
-                                      |              "type": "record",
-                                      |              "fields": [
-                                      |                {
-                                      |                  "name": "r1_r2_s",
-                                      |                  "type": "string"
-                                      |                },
-                                      |                {
-                                      |                  "name": "r1_r2_i",
-                                      |                  "type": "int"
-                                      |                }
-                                      |              ]
-                                      |            }
-                                      |          }
-                                      |        ]
-                                      |      }
-                                      |    }
-                                      |  ]
-                                      |}""".stripMargin)
+        |{
+        |  "type": "record",
+        |  "name": "sch_rec1",
+        |  "fields": [
+        |    {
+        |      "name": "r1",
+        |      "type": {
+        |        "name": "sch_r1",
+        |        "type": "record",
+        |        "fields": [
+        |          {
+        |            "name": "r1_s",
+        |            "type": "string"
+        |          },
+        |          {
+        |            "name": "r1_r2",
+        |            "type": {
+        |              "name": "sch_r1_r2",
+        |              "type": "record",
+        |              "fields": [
+        |                {
+        |                  "name": "r1_r2_s",
+        |                  "type": "string"
+        |                },
+        |                {
+        |                  "name": "r1_r2_i",
+        |                  "type": "int"
+        |                }
+        |              ]
+        |            }
+        |          }
+        |        ]
+        |      }
+        |    }
+        |  ]
+        |}""".stripMargin)
 
     val r1_r2 = new GenericData.Record(schema.getField("r1").schema().getField("r1_r2").schema())
     r1_r2.put("r1_r2_s", "bbb")

@@ -29,7 +29,7 @@ class CsvRow private[csv] (headerMap: Map[String, Int], values: Array[String]) e
 }
 
 private[csv] class PrefixFilteringCsvData(data: CsvData, prefix: String) extends CsvData {
-  override private[csv] def headers: Map[String, Int] = data.headers.collect {
+  override private[csv] val headers: Map[String, Int] = data.headers.collect {
     case (key, idx) if key.startsWith(prefix) => key.stripPrefix(prefix) -> idx
   }
   override def get(key: String): Option[String] = data.get(s"$prefix$key")
