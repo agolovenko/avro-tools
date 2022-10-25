@@ -4,7 +4,7 @@ object Dependencies {
   private def apacheAvro       = "org.apache.avro"        % "avro"                     % "1.11.0"
   private def collectionCompat = "org.scala-lang.modules" %% "scala-collection-compat" % "2.8.1"
   private def playJson         = "com.typesafe.play"      %% "play-json"               % "2.9.3"
-  private def scalaXml         = "org.scala-lang.modules" %% "scala-xml"               % "1.3.0"
+  private def scalaXml         = "org.scala-lang.modules" %% "scala-xml"               % "2.1.0"
   private def univocityParser  = "com.univocity"          % "univocity-parsers"        % "2.9.1"
   private def scalaTest        = "org.scalatest"          %% "scalatest"               % "3.2.14"
 
