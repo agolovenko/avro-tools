@@ -4,7 +4,7 @@ import play.api.libs.json.{JsObject, Json}
 
 import java.io.{BufferedReader, Reader}
 
-class JsonLIterator(reader: => Reader) extends Iterator[JsObject] {
+class JsonLinesIterator(reader: => Reader) extends Iterator[JsObject] {
   private val bufferedReader = reader match {
     case buffered: BufferedReader => buffered
     case unBuffered               => new BufferedReader(unBuffered)

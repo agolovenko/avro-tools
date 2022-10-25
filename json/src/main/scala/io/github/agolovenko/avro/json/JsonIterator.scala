@@ -1,6 +1,6 @@
 package io.github.agolovenko.avro.json
 
-import com.fasterxml.jackson.core.{JsonParser => JJsonParser, JsonToken}
+import com.fasterxml.jackson.core.{JsonToken, JsonParser => JJsonParser}
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import play.api.libs.json.jackson.PlayJsonModule
@@ -8,7 +8,7 @@ import play.api.libs.json.{JsObject, JsonParserSettings}
 
 import java.io.Reader
 
-class JsonArrayIterator(reader: => Reader) extends Iterator[JsObject] {
+class JsonIterator(reader: => Reader) extends Iterator[JsObject] {
   private val mapper = new ObjectMapper()
     .registerModule(new PlayJsonModule(JsonParserSettings()))
     .enable(JJsonParser.Feature.AUTO_CLOSE_SOURCE)
@@ -16,19 +16,19 @@ class JsonArrayIterator(reader: => Reader) extends Iterator[JsObject] {
   private val parser         = mapper.createParser(reader)
   private val jsObjectReader = mapper.readerFor(classOf[JsObject])
 
-  private var nextToken = {
-    val next = parser.nextToken
-    if (next != JsonToken.START_ARRAY) throw new IllegalStateException(s"Expected start of array, got instead: $next")
-
-    parser.nextToken
+  private var nextToken = parser.nextToken match {
+    case JsonToken.START_ARRAY  => parser.nextToken
+    case JsonToken.START_OBJECT => JsonToken.START_OBJECT
+    case next                   => throw new JsonException(s"Expected start of an array or an object, got instead: $next")
   }
 
-  override def hasNext: Boolean =
-    if (nextToken == JsonToken.START_OBJECT) true
-    else if (nextToken == JsonToken.END_ARRAY) {
+  override def hasNext: Boolean = nextToken match {
+    case JsonToken.START_OBJECT => true
+    case JsonToken.END_ARRAY | null =>
       parser.close()
       false
-    } else throw new IllegalStateException(s"Expected end of array, got instead: $nextToken")
+    case next => throw new JsonException(s"Expected end of an array or an object, got instead: $next")
+  }
 
   override def next(): JsObject = {
     val objectNode = mapper.readTree[ObjectNode](parser)

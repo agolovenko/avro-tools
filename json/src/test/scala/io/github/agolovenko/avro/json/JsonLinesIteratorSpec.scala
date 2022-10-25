@@ -5,7 +5,7 @@ import org.scalatest.wordspec.AnyWordSpec
 
 import java.io.StringReader
 
-class JsonLIteratorSpec extends AnyWordSpec with Matchers {
+class JsonLinesIteratorSpec extends AnyWordSpec with Matchers {
   "parses jsonL" in {
     val json =
       """
@@ -16,19 +16,19 @@ class JsonLIteratorSpec extends AnyWordSpec with Matchers {
         |
         |""".stripMargin
 
-    val it        = new JsonLIterator(new StringReader(json))
-    val jsObjects = it.toList
+    val it        = new JsonLinesIterator(new StringReader(json))
+    val jsObjects = it.toVector
 
     jsObjects should have size 2
     (jsObjects(1) \ "clientId").as[Int] shouldBe 124
   }
 
   "accepts empty input" in {
-    noException should be thrownBy new JsonLIterator(new StringReader("   ")).foreach(_ => ())
+    noException should be thrownBy new JsonLinesIterator(new StringReader("   ")).foreach(_ => ())
   }
 
   "expects jsonL as input" in {
-    an[Exception] should be thrownBy new JsonLIterator(new StringReader("[{}]")).foreach(_ => ())
-    noException should be thrownBy new JsonLIterator(new StringReader("{}\n\n{}")).foreach(_ => ())
+    an[Exception] should be thrownBy new JsonLinesIterator(new StringReader("[{}]")).foreach(_ => ())
+    noException should be thrownBy new JsonLinesIterator(new StringReader("{}\n\n{}")).foreach(_ => ())
   }
 }
