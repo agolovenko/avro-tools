@@ -36,12 +36,18 @@ and `2.13`
         * `timestamp-millis`
         * `timestamp-micros`
 
+### [JsonArrayIterator](src/main/scala/io/github/agolovenko/avro/json/JsonArrayIterator.scala)
+* A utility class that implements `Iterator[JsObject]` and parses array of objects in stream-like fashion
+
+### [JsonLIterator](src/main/scala/io/github/agolovenko/avro/json/JsonLIterator.scala)
+* A utility class that implements `Iterator[JsObject]` and parses `JsonL` format in stream-like fashion
+
 ## Usage
 
 ### build.sbt:
 
 ```sbt
-libraryDependencies += "io.github.agolovenko" %% "avro-tools-json" % "0.6.2"
+libraryDependencies += "io.github.agolovenko" %% "avro-tools-json" % "0.7.0"
 ```
 
 ### code:

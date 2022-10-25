@@ -2,8 +2,8 @@ import com.jsuereth.sbtpgp.PgpKeys.publishSigned
 import sbt.Keys.scalaVersion
 import sbt.Opts.resolver.{sonatypeSnapshots, sonatypeStaging}
 
-lazy val scala213               = "2.13.8"
-lazy val scala212               = "2.12.15"
+lazy val scala213               = "2.13.10"
+lazy val scala212               = "2.12.17"
 lazy val scala211               = "2.11.12"
 lazy val supportedScalaVersions = Seq(scala213, scala212, scala211)
 
