@@ -22,7 +22,12 @@ class JsonLIterator(reader: => Reader) extends Iterator[JsObject] {
     line
   }
 
-  override def hasNext: Boolean = nextLine != null
+  override def hasNext: Boolean =
+    if (nextLine != null) true
+    else {
+      bufferedReader.close()
+      false
+    }
 
   override def next(): JsObject = {
     val line = nextLine
