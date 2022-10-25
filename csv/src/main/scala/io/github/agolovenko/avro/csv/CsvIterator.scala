@@ -4,8 +4,7 @@ import com.univocity.parsers.common.{AbstractParser, CommonParserSettings}
 import com.univocity.parsers.csv.{CsvParserSettings, CsvParser => UnivocityCsvParser}
 import com.univocity.parsers.tsv.{TsvParserSettings, TsvParser => UnivocityTsvParser}
 
-import java.io.{InputStream, Reader, StringReader}
-import java.nio.charset.Charset
+import java.io.Reader
 
 class CsvIterator private (parser: AbstractParser[_], customHeaders: Option[Array[String]]) extends Iterator[CsvRow] {
   private val headerMap = {
@@ -38,14 +37,6 @@ object CsvIterator {
     val parser = newParser(settings)
 
     parser.beginParsing(reader)
-
-    new CsvIterator(parser, customHeaders)
-  }
-
-  def apply[S <: CommonParserSettings[_]](settings: S, customHeaders: Option[Array[String]])(content: String): CsvIterator = {
-    val parser = newParser(settings)
-
-    parser.beginParsing(new StringReader(content))
 
     new CsvIterator(parser, customHeaders)
   }

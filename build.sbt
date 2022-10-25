@@ -4,8 +4,7 @@ import sbt.Opts.resolver.{sonatypeSnapshots, sonatypeStaging}
 
 lazy val scala213               = "2.13.10"
 lazy val scala212               = "2.12.17"
-lazy val scala211               = "2.11.12"
-lazy val supportedScalaVersions = Seq(scala213, scala212, scala211)
+lazy val supportedScalaVersions = Seq(scala213, scala212)
 
 lazy val baseName = "avro-tools"
 
@@ -38,7 +37,7 @@ lazy val core = project
   .enablePlugins(GitVersioning)
   .settings(
     name := s"$baseName-core",
-    libraryDependencies ++= new Dependencies(scalaVersion.value).core
+    libraryDependencies ++= Dependencies.core
   )
 
 lazy val json = project
@@ -46,7 +45,7 @@ lazy val json = project
   .enablePlugins(GitVersioning)
   .settings(
     name := s"$baseName-json",
-    libraryDependencies ++= new Dependencies(scalaVersion.value).json
+    libraryDependencies ++= Dependencies.json
   )
   .dependsOn(core)
 
@@ -55,7 +54,7 @@ lazy val xml = project
   .enablePlugins(GitVersioning)
   .settings(
     name := s"$baseName-xml",
-    libraryDependencies ++= new Dependencies(scalaVersion.value).xml
+    libraryDependencies ++= Dependencies.xml
   )
   .dependsOn(core)
 
@@ -64,7 +63,7 @@ lazy val csv = project
   .enablePlugins(GitVersioning)
   .settings(
     name := s"$baseName-csv",
-    libraryDependencies ++= new Dependencies(scalaVersion.value).csv
+    libraryDependencies ++= Dependencies.csv
   )
   .dependsOn(core)
 

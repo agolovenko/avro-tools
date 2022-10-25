@@ -1,6 +1,6 @@
 package io.github.agolovenko.avro.json
 
-import com.fasterxml.jackson.core.{JsonParser, JsonToken}
+import com.fasterxml.jackson.core.{JsonParser => JJsonParser, JsonToken}
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import play.api.libs.json.jackson.PlayJsonModule
@@ -11,7 +11,7 @@ import java.io.Reader
 class JsonArrayIterator(reader: => Reader) extends Iterator[JsObject] {
   private val mapper = new ObjectMapper()
     .registerModule(new PlayJsonModule(JsonParserSettings()))
-    .enable(JsonParser.Feature.AUTO_CLOSE_SOURCE)
+    .enable(JJsonParser.Feature.AUTO_CLOSE_SOURCE)
 
   private val parser         = mapper.createParser(reader)
   private val jsObjectReader = mapper.readerFor(classOf[JsObject])
