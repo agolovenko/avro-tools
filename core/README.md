@@ -1,4 +1,4 @@
-# avro-tools-json
+# avro-tools-core
 
 Base classes and utilities for Avro conversion projects.
 
@@ -21,7 +21,7 @@ Base classes and utilities for Avro conversion projects.
 ### build.sbt:
 
 ```sbt
-libraryDependencies += "io.github.agolovenko" %% "avro-tools-core" % "0.7.0"
+libraryDependencies += "io.github.agolovenko" %% "avro-tools-core" % "0.8.0"
 
 ```
 

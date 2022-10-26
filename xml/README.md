@@ -21,12 +21,17 @@ Set of tools for XML to Avro conversions written in Scala using scala-xml. Avail
         * `timestamp-micros`
 * Comprehensive Exceptions: General/Missing Value/Wrong Type. All containing path and description
 
+### [XmlIterator](src/main/scala/io/github/agolovenko/avro/xml/XmlIterator.scala)
+
+* A utility class that implements `Iterator[Elem]` and parses xml in stream-like fashion
+
 ## Usage
 
 ### build.sbt:
 
 ```sbt
-libraryDependencies += "io.github.agolovenko" %% "avro-tools-xml" % "0.7.0"
+libraryDependencies += "io.github.agolovenko" %% "avro-tools-xml" % "0.8.0"
+
 ```
 
 ### code:

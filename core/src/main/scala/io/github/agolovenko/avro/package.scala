@@ -9,8 +9,23 @@ import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 import scala.jdk.CollectionConverters._
+import scala.util.control.NonFatal
 
 package object avro {
+  def closeOnError[C <: AutoCloseable, R](closeable: C)(block: => R): R = {
+    try {
+      block
+    } catch {
+      case NonFatal(ex) =>
+        try {
+          if (closeable != null) closeable.close()
+        } catch {
+          case NonFatal(sup) => ex.addSuppressed(sup)
+        }
+        throw ex
+    }
+  }
+
   def toBytes(record: GenericData.Record): Array[Byte] = {
     val writer = new GenericDatumWriter[GenericData.Record]()
     writer.setSchema(record.getSchema)

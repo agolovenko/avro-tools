@@ -28,7 +28,7 @@ class JsonLinesIteratorSpec extends AnyWordSpec with Matchers {
   }
 
   "expects jsonL as input" in {
-    an[Exception] should be thrownBy new JsonLinesIterator(new StringReader("[{}]")).foreach(_ => ())
+    a[JsonException] should be thrownBy new JsonLinesIterator(new StringReader("[{}]")).foreach(_ => ())
     noException should be thrownBy new JsonLinesIterator(new StringReader("{}\n\n{}")).foreach(_ => ())
   }
 }
